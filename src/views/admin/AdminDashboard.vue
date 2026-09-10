@@ -11,7 +11,7 @@ import { useGuardiansStore } from '../../stores/guardians'
 import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
 import { formatNumber, computeTrend } from '../../utils/format'
-
+import * as XLSX from 'xlsx'
 const doctorsStore = useDoctorsStore()
 const centersStore = useCentersStore()
 const childrenStore = useChildrenStore()
@@ -79,6 +79,68 @@ async function removeDoctor(doctor) {
 const settingsLinks = ['إعدادات عامة', 'إعدادات التنبيهات', 'الأمان والخصوصية']
 
 const query = ref('')
+
+function exportExcel() {
+  if (!audit.entries.length) {
+    toast.info('تنبيه', 'لا يوجد سجلات لتصديرها.')
+    return
+  }
+  const data = audit.entries.map(e => ({
+    'النشاط': e.details,
+    'النوع': e.type,
+    'الوقت': e.time,
+    'بواسطة': e.user_name || 'غير معروف'
+  }))
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'سجل النشاط')
+  XLSX.writeFile(wb, 'Audit_Log_Laqahi.xlsx')
+}
+
+function exportPdf() {
+  if (!audit.entries.length) {
+    toast.info('تنبيه', 'لا يوجد سجلات لتصديرها.')
+    return
+  }
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+
+  const rows = audit.entries.map(e => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${e.details}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${e.time}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #ddd;">${e.user_name || 'غير معروف'}</td>
+    </tr>
+  `).join('')
+
+  printWindow.document.write(`
+    <html dir="rtl" lang="ar">
+      <head>
+        <title>سجل نشاط النظام - لقاحي</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: right; }
+          th { background: #1fa15f; color: white; padding: 10px 8px; }
+        </style>
+      </head>
+      <body>
+        <h2>سجل نشاط النظام - منصة لقاحي</h2>
+        <table>
+          <thead>
+            <tr><th>النشاط</th><th>الوقت</th><th>بواسطة</th></tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() { window.print(); window.close(); }
+        <\/script>
+      </body>
+    </html>
+  `)
+  printWindow.document.close()
+}
 </script>
 
 <template>
@@ -300,13 +362,23 @@ const query = ref('')
 
         <!-- الإعدادات والنسخ الاحتياطي: في أقصى اليسار -->
         <div class="oversight__col">
-          <button class="btn btn-outline export-btn">
-            تصدير التقرير
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
-          </button>
+          <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 22px;">
+            <button @click="exportPdf" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;">
+              تصدير PDF
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3v12m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button @click="exportExcel" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;">
+              تصدير Excel
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M14 3v4a1 1 0 0 0 1 1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 12l4 4m0 -4l-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
           <div class="backup-card">
             <span class="backup-card__icon">
