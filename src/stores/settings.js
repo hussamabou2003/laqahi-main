@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '../utils/api'
+import { apiFetch } from '../utils/api'
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
@@ -15,8 +15,8 @@ export const useSettingsStore = defineStore('settings', {
     async fetchSettings() {
       this.loading = true
       try {
-        const res = await api.get('/admin/settings')
-        const data = await res.json()
+        const res = await apiFetch('/admin/settings')
+        const data = res.data || res
         this.maintenance_mode = data.maintenance_mode || 'false'
         this.support_phone = data.support_phone || ''
         this.support_email = data.support_email || ''
@@ -31,7 +31,7 @@ export const useSettingsStore = defineStore('settings', {
     
     async updateSettings(payload) {
       try {
-        await api.post('/admin/settings', payload)
+        await apiFetch('/admin/settings', { method: 'POST', body: payload })
         Object.assign(this.$state, payload)
       } catch (err) {
         throw new Error('فشل تحديث الإعدادات')
@@ -39,20 +39,19 @@ export const useSettingsStore = defineStore('settings', {
     },
 
     async changePassword(currentPassword, newPassword, newPasswordConfirmation) {
-      const res = await api.post('/admin/settings/change-password', {
-        current_password: currentPassword,
-        new_password: newPassword,
-        new_password_confirmation: newPasswordConfirmation
+      const res = await apiFetch('/admin/settings/change-password', {
+        method: 'POST',
+        body: {
+          current_password: currentPassword,
+          new_password: newPassword,
+          new_password_confirmation: newPasswordConfirmation
+        }
       })
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.message || 'فشل تغيير كلمة المرور')
-      }
+      // apiFetch automatically throws if !res.ok, so if we reach here it was successful.
     },
 
     async killSessions() {
-      const res = await api.post('/admin/settings/kill-sessions', {})
-      if (!res.ok) throw new Error('فشل تسجيل الخروج')
+      await apiFetch('/admin/settings/kill-sessions', { method: 'POST', body: {} })
     }
   }
 })
