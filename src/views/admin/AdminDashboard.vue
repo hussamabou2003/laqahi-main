@@ -12,6 +12,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
 import { formatNumber, computeTrend } from '../../utils/format'
 import * as XLSX from 'xlsx'
+import { getToken } from '../../utils/api'
 const doctorsStore = useDoctorsStore()
 const centersStore = useCentersStore()
 const childrenStore = useChildrenStore()
@@ -148,7 +149,7 @@ async function triggerBackup() {
     toast.info('جاري التجهيز', 'يتم سحب النسخة الاحتياطية من السحابة...')
     const res = await fetch(import.meta.env.VITE_API_URL + '/admin/backup', {
       headers: {
-        'Authorization': `Bearer ${auth.token}`
+        'Authorization': `Bearer ${getToken()}`
       }
     })
     if (!res.ok) throw new Error('فشل النسخ الاحتياطي')

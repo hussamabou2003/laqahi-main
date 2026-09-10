@@ -6,6 +6,7 @@ import { useThemeStore } from '../../stores/theme'
 import { useToastStore } from '../../stores/toast'
 import { useAuditStore } from '../../stores/audit'
 import { useAuthStore } from '../../stores/auth'
+import { getToken } from '../../utils/api'
 
 const settings = useSettingsStore()
 const theme = useThemeStore()
