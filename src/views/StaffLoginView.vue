@@ -52,41 +52,20 @@
         </button>
       </form>
 
-      <!-- صندوق الحسابات المسجلة الثابتة (يتغير حسب الدور المختار) -->
-      <div class="demo-box">
-        <p class="demo-box__title">حسابات مسجلة مسبقاً (انقر للاختيار):</p>
-        
-        <div v-if="filteredAccounts.length > 0">
-          <!-- الدخول السريع: يعبئ الاسم فقط ويظهر تنبيه -->
-          <button v-for="acc in filteredAccounts" :key="acc.username" type="button" class="demo-account" @click="fillUsername(acc.username)">
-            <span class="demo-account__avatar" :style="{ background: acc.role === 'admin' ? '#0e6b60' : '#3b82f6' }">
-              {{ getInitials(acc.name) }}
-            </span>
-            <span class="demo-account__info">
-              <strong>{{ acc.name }}</strong>
-              <small>{{ acc.role === 'admin' ? 'مدير النظام' : 'طبيب' }} ({{ acc.username }})</small>
-            </span>
-            <span class="demo-account__use">اختيار <i class="ti ti-arrow-left"></i></span>
-          </button>
-        </div>
-        <p v-else class="no-data">لا توجد حسابات مسجلة لهذه الصلاحية حالياً.</p>
-      </div>
 
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useDoctorsStore } from '../stores/doctors'
 import { useToastStore } from '../stores/toast'
 import LogoIcon from '../components/LogoIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const doctorsStore = useDoctorsStore()
 const toastStore = useToastStore()
 
 const username = ref('')
@@ -97,36 +76,6 @@ const errorMessage = ref('')
 // المتغير المسؤول عن تحديد نوع الحساب (طبيب أو مدير)
 const selectedRole = ref('doctor')
 
-// دالة استخراج أول حرفين من الاسم
-function getInitials(name) {
-  if (!name) return 'ط'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length >= 2) return parts[0].charAt(0) + parts[1].charAt(0)
-  return name.substring(0, 2)
-}
-
-// تصفية الحسابات بناءً على الدور المحدد (طبيب أو مدير)
-const filteredAccounts = computed(() => {
-  const accounts = []
-  if (doctorsStore && doctorsStore.list) {
-    doctorsStore.list.forEach(doc => {
-      accounts.push({
-        username: doc.username,
-        name: doc.name,
-        role: doc.role
-      })
-    })
-  }
-  return accounts.filter(acc => acc.role === selectedRole.value)
-})
-
-// تعبئة الاسم فقط وإظهار تنبيه بإدخال كلمة المرور
-function fillUsername(selectedUsername) {
-  username.value = selectedUsername
-  password.value = '' 
-  errorMessage.value = ''
-  toastStore.info('تم تحديد الحساب', 'الرجاء كتابة كلمة المرور الخاصة بك لتسجيل الدخول.')
-}
 
 async function submit() {
   errorMessage.value = ''
