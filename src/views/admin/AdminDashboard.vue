@@ -141,6 +141,31 @@ function exportPdf() {
   `)
   printWindow.document.close()
 }
+const isKillingSessions = ref(false)
+
+async function triggerBackup() {
+  try {
+    toast.info('جاري التجهيز', 'يتم سحب النسخة الاحتياطية من السحابة...')
+    const res = await fetch(import.meta.env.VITE_API_URL + '/admin/backup', {
+      headers: {
+        'Authorization': `Bearer ${auth.token}`
+      }
+    })
+    if (!res.ok) throw new Error('فشل النسخ الاحتياطي')
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `laqahi_backup_${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    toast.success('تم بنجاح', 'تم سحب وحفظ النسخة الاحتياطية لجهازك.')
+    audit.log('settings', 'نظام', 'قام مدير النظام بسحب نسخة احتياطية', auth.user?.name)
+  } catch (err) {
+    toast.error('خطأ', 'فشلت عملية النسخ الاحتياطي')
+  }
+}
 </script>
 
 <template>
@@ -388,8 +413,8 @@ function exportPdf() {
               </svg>
             </span>
             <p class="backup-card__label">النسخ الاحتياطي</p>
-            <p class="backup-card__status">محدّث</p>
-            <button class="btn btn-primary btn-xs backup-card__btn">تحديث الآن</button>
+            <p class="backup-card__status">{{ new Date().toLocaleDateString('ar-SA') }}</p>
+            <button class="btn btn-primary btn-xs backup-card__btn" @click="triggerBackup">سحب نسخة الآن</button>
           </div>
 
           <ul class="settings-list">

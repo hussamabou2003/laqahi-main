@@ -1,50 +1,58 @@
 import { defineStore } from 'pinia'
-
-const STORAGE_KEY = 'laqahi_settings'
-
-const defaults = {
-  general: {
-    systemName: 'لقاحي — نظام التحصين الذكي',
-    timezone: 'Asia/Damascus',
-    language: 'ar'
-  },
-  notifications: {
-    stockAlerts: true,
-    newAccountRequests: true,
-    weeklyEmailReport: false
-  },
-  security: {
-    twoFactor: false,
-    sessionTimeoutMinutes: 30
-  }
-}
-
-function load() {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  if (!saved) return structuredClone(defaults)
-  try {
-    return { ...structuredClone(defaults), ...JSON.parse(saved) }
-  } catch {
-    return structuredClone(defaults)
-  }
-}
+import api from '../utils/api'
 
 export const useSettingsStore = defineStore('settings', {
-  state: () => load(),
+  state: () => ({
+    maintenance_mode: 'false',
+    support_phone: '0999000000',
+    support_email: 'support@laqahi.com',
+    notification_template: 'حان موعد لقاح طفلك {child_name}، يرجى مراجعة المركز.',
+    notifications_enabled: 'true',
+    loading: false
+  }),
+
   actions: {
-    save(section, patch) {
-      this[section] = { ...this[section], ...patch }
-      this.persist()
+    async fetchSettings() {
+      this.loading = true
+      try {
+        const res = await api.get('/admin/settings')
+        const data = await res.json()
+        this.maintenance_mode = data.maintenance_mode || 'false'
+        this.support_phone = data.support_phone || ''
+        this.support_email = data.support_email || ''
+        this.notification_template = data.notification_template || ''
+        this.notifications_enabled = data.notifications_enabled || 'true'
+      } catch (err) {
+        console.error('Failed to fetch settings:', err)
+      } finally {
+        this.loading = false
+      }
     },
-    persist() {
-      const { general, notifications, security } = this
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ general, notifications, security }))
+    
+    async updateSettings(payload) {
+      try {
+        await api.post('/admin/settings', payload)
+        Object.assign(this.$state, payload)
+      } catch (err) {
+        throw new Error('فشل تحديث الإعدادات')
+      }
     },
-    resetToDefaults() {
-      this.general = structuredClone(defaults.general)
-      this.notifications = structuredClone(defaults.notifications)
-      this.security = structuredClone(defaults.security)
-      this.persist()
+
+    async changePassword(currentPassword, newPassword, newPasswordConfirmation) {
+      const res = await api.post('/admin/settings/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: newPasswordConfirmation
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'فشل تغيير كلمة المرور')
+      }
+    },
+
+    async killSessions() {
+      const res = await api.post('/admin/settings/kill-sessions', {})
+      if (!res.ok) throw new Error('فشل تسجيل الخروج')
     }
   }
 })

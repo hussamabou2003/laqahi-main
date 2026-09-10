@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
 import { useSettingsStore } from '../../stores/settings'
 import { useThemeStore } from '../../stores/theme'
@@ -21,52 +21,78 @@ const tabs = [
 ]
 const activeTab = ref('general')
 
-const timezones = [
-  { value: 'Asia/Damascus', label: 'دمشق (GMT+3)' },
-  { value: 'Asia/Riyadh', label: 'الرياض (GMT+3)' },
-  { value: 'Africa/Cairo', label: 'القاهرة (GMT+2)' },
-  { value: 'Asia/Dubai', label: 'دبي (GMT+4)' }
-]
+onMounted(async () => {
+  await settings.fetchSettings()
+})
 
-const generalForm = reactive({ ...settings.general })
-function saveGeneral() {
-  settings.save('general', generalForm)
-  audit.log('settings', 'إعدادات', 'تم تحديث الإعدادات العامة للنظام', auth.user?.name)
-  toast.success('تم الحفظ', 'تم تحديث الإعدادات العامة بنجاح.')
+async function saveGeneral() {
+  try {
+    await settings.updateSettings({
+      maintenance_mode: String(settings.maintenance_mode),
+      support_phone: settings.support_phone,
+      support_email: settings.support_email
+    })
+    audit.log('settings', 'إعدادات', 'تم تحديث الإعدادات العامة (رقم الدعم، وضع الصيانة)', auth.user?.name)
+    toast.success('تم الحفظ', 'تم تحديث الإعدادات العامة بنجاح.')
+  } catch (err) {
+    toast.error('خطأ', 'فشل حفظ الإعدادات')
+  }
 }
 
-function toggleNotification(key) {
-  settings.save('notifications', { [key]: !settings.notifications[key] })
-  toast.info('تم التحديث', 'تم تحديث إعدادات الإشعارات.')
-}
-
-const securityForm = reactive({ sessionTimeoutMinutes: settings.security.sessionTimeoutMinutes })
-function saveSecurity() {
-  settings.save('security', { sessionTimeoutMinutes: Number(securityForm.sessionTimeoutMinutes) || 30 })
-  audit.log('settings', 'إعدادات', 'تم تحديث إعدادات الأمان (مهلة الجلسة)', auth.user?.name)
-  toast.success('تم الحفظ', 'تم تحديث إعدادات الأمان.')
-}
-
-function toggleTwoFactor() {
-  settings.save('security', { twoFactor: !settings.security.twoFactor })
-  toast.info(settings.security.twoFactor ? 'تم تفعيل المصادقة الثنائية' : 'تم إيقاف المصادقة الثنائية')
+async function saveNotifications() {
+  try {
+    await settings.updateSettings({
+      notification_template: settings.notification_template,
+      notifications_enabled: String(settings.notifications_enabled)
+    })
+    audit.log('settings', 'إعدادات', 'تم تحديث قالب الإشعارات', auth.user?.name)
+    toast.success('تم الحفظ', 'تم تحديث إعدادات الإشعارات بنجاح.')
+  } catch (err) {
+    toast.error('خطأ', 'فشل حفظ الإشعارات')
+  }
 }
 
 const passwordForm = reactive({ current: '', next: '', confirm: '' })
-function changePassword() {
+const isChangingPassword = ref(false)
+
+async function changePassword() {
   if (!passwordForm.current || !passwordForm.next) {
     toast.error('بيانات ناقصة', 'يرجى تعبئة كلمة المرور الحالية والجديدة.')
     return
   }
   if (passwordForm.next !== passwordForm.confirm) {
-    toast.error('كلمتا المرور غير متطابقتين', 'تأكد من تطابق كلمة المرور الجديدة وتأكيدها.')
+    toast.error('غير متطابق', 'تأكد من تطابق كلمة المرور الجديدة وتأكيدها.')
     return
   }
-  // ملاحظة: هذه واجهة أمامية تجريبية فقط بلا خادم فعلي، لذا لا يتم تغيير كلمة مرور حقيقية.
-  toast.success('تم تحديث كلمة المرور', 'سيتم تطبيق التغيير الفعلي عند ربط النظام بخادم حقيقي.')
-  passwordForm.current = ''
-  passwordForm.next = ''
-  passwordForm.confirm = ''
+
+  isChangingPassword.value = true
+  try {
+    await settings.changePassword(passwordForm.current, passwordForm.next, passwordForm.confirm)
+    toast.success('تم', 'تم تغيير كلمة المرور بنجاح.')
+    passwordForm.current = ''
+    passwordForm.next = ''
+    passwordForm.confirm = ''
+    audit.log('security', 'أمان', 'تم تغيير كلمة مرور مدير النظام', auth.user?.name)
+  } catch (err) {
+    toast.error('خطأ', err.message || 'تعذر تغيير كلمة المرور')
+  } finally {
+    isChangingPassword.value = false
+  }
+}
+
+const isKillingSessions = ref(false)
+async function killSessions() {
+  if (!confirm('هل أنت متأكد أنك تريد طرد جميع الأطباء والأهالي وإلغاء جلساتهم النشطة؟ سيضطرون لتسجيل الدخول من جديد.')) return
+  isKillingSessions.value = true
+  try {
+    await settings.killSessions()
+    toast.success('تم بنجاح', 'تم تسجيل خروج جميع المستخدمين النشطين فوراً.')
+    audit.log('security', 'أمان', 'تم إنهاء جميع جلسات الأطباء والأهالي (طوارئ)', auth.user?.name)
+  } catch (err) {
+    toast.error('خطأ', 'تعذر تنفيذ الإجراء')
+  } finally {
+    isKillingSessions.value = false
+  }
 }
 </script>
 
@@ -121,82 +147,72 @@ function changePassword() {
 
     <!-- الإشعارات -->
     <section v-if="activeTab === 'notifications'" class="card box-pad">
-      <h2 class="panel__title">تفضيلات الإشعارات</h2>
-      <p class="panel__desc">اختر التنبيهات التي تريد استلامها من النظام.</p>
 
-      <div class="switch-row">
+      <h2 class="panel__title">إعدادات التنبيهات</h2>
+      <p class="panel__desc">تخصيص قوالب الرسائل وتفعيل الإشعارات للأهالي.</p>
+
+      <div class="switch-row" style="margin-bottom: 20px;">
         <div>
-          <p class="switch-row__label">تنبيهات نقص مخزون اللقاحات</p>
-          <p class="switch-row__desc">تنبيه فوري عند انخفاض مخزون أي لقاح عن الحد الآمن.</p>
+          <p class="switch-row__label">إرسال الإشعارات تلقائياً</p>
+          <p class="switch-row__desc">إذا تم إيقافه، لن يتم إرسال أي إشعار تذكير أو تنبيه لأي مستخدم.</p>
         </div>
-        <button class="switch" :class="{ 'switch--on': settings.notifications.stockAlerts }" @click="toggleNotification('stockAlerts')">
+        <button class="switch" :class="{ 'switch--on': settings.notifications_enabled === 'true' }" @click="settings.notifications_enabled = settings.notifications_enabled === 'true' ? 'false' : 'true'">
           <span class="switch__thumb"></span>
         </button>
       </div>
 
-      <div class="switch-row">
-        <div>
-          <p class="switch-row__label">طلبات تسجيل حسابات جديدة</p>
-          <p class="switch-row__desc">إشعار عند تقديم طلب تسجيل حساب طبيب أو مركز جديد.</p>
-        </div>
-        <button class="switch" :class="{ 'switch--on': settings.notifications.newAccountRequests }" @click="toggleNotification('newAccountRequests')">
-          <span class="switch__thumb"></span>
-        </button>
+      <div class="form-field">
+        <label>قالب رسالة التذكير بموعد اللقاح</label>
+        <p style="font-size: 12px; color: #666; margin-bottom: 8px;">استخدم المتغير <code>{child_name}</code> ليتم استبداله باسم الطفل تلقائياً.</p>
+        <textarea v-model="settings.notification_template" rows="3" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; resize: vertical;"></textarea>
       </div>
 
-      <div class="switch-row">
-        <div>
-          <p class="switch-row__label">تقرير أسبوعي عبر البريد الإلكتروني</p>
-          <p class="switch-row__desc">ملخص أسبوعي بأداء النظام يُرسل كل يوم أحد.</p>
-        </div>
-        <button class="switch" :class="{ 'switch--on': settings.notifications.weeklyEmailReport }" @click="toggleNotification('weeklyEmailReport')">
-          <span class="switch__thumb"></span>
-        </button>
-      </div>
+      <button class="btn btn-primary" @click="saveNotifications" :disabled="settings.loading">حفظ التفضيلات</button>
     </section>
 
     <!-- الأمان -->
     <section v-if="activeTab === 'security'" class="security-grid">
-      <div class="card box-pad">
-        <h2 class="panel__title">إعدادات الأمان</h2>
-        <p class="panel__desc">تحكم بمتطلبات تسجيل الدخول ومهلة الجلسة.</p>
+      <div class="card box-pad" style="grid-column: 1 / -1;">
+        <h2 class="panel__title" style="color: #dc3545;">منطقة الخطر (إدارة الجلسات)</h2>
+        <p class="panel__desc">خيارات الأمان المتقدمة في حالات الطوارئ.</p>
 
-        <div class="switch-row">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #f8d7da; padding: 16px; border-radius: 8px;">
           <div>
-            <p class="switch-row__label">المصادقة الثنائية (2FA)</p>
-            <p class="switch-row__desc">طبقة حماية إضافية عبر رمز تحقق عند تسجيل الدخول.</p>
+            <p style="font-weight: 700; color: #721c24; margin-bottom: 4px;">طرد وتسجيل خروج جميع المستخدمين</p>
+            <p style="font-size: 13px; color: #721c24;">هذا الإجراء سيقوم بتسجيل خروج جميع الأطباء والأهالي من المنصة فوراً لمنع أي نشاط مشبوه.</p>
           </div>
-          <button class="switch" :class="{ 'switch--on': settings.security.twoFactor }" @click="toggleTwoFactor">
-            <span class="switch__thumb"></span>
+          <button class="btn btn-outline" style="color: #dc3545; border-color: #dc3545;" @click="killSessions" :disabled="isKillingSessions">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v2m0 4v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M5 19h14a2 2 0 0 0 1.84 -2.75L13.74 4a2 2 0 0 0 -3.5 0l-7.1 12.25A2 2 0 0 0 4.89 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            تنفيذ الطرد الآن
           </button>
         </div>
-
-        <div class="form-field">
-          <label>مهلة انتهاء الجلسة (بالدقائق)</label>
-          <input v-model="securityForm.sessionTimeoutMinutes" type="number" min="5" max="240" />
-        </div>
-
-        <button class="btn btn-primary" @click="saveSecurity">حفظ إعدادات الأمان</button>
       </div>
 
-      <div class="card box-pad">
+      <div class="card box-pad" style="grid-column: 1 / -1;">
         <h2 class="panel__title">تغيير كلمة المرور</h2>
-        <p class="panel__desc">واجهة تجريبية — سيتم ربطها بالتحقق الفعلي لاحقًا.</p>
+        <p class="panel__desc">تغيير كلمة المرور الخاصة بحساب مدير النظام (Admin).</p>
 
-        <div class="form-field">
-          <label>كلمة المرور الحالية</label>
-          <input v-model="passwordForm.current" type="password" />
-        </div>
-        <div class="form-field">
-          <label>كلمة المرور الجديدة</label>
-          <input v-model="passwordForm.next" type="password" />
-        </div>
-        <div class="form-field">
-          <label>تأكيد كلمة المرور الجديدة</label>
-          <input v-model="passwordForm.confirm" type="password" />
+        <div class="form-row" style="grid-template-columns: 1fr;">
+          <div class="form-field">
+            <label>كلمة المرور الحالية</label>
+            <input v-model="passwordForm.current" type="password" />
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>كلمة المرور الجديدة</label>
+              <input v-model="passwordForm.next" type="password" />
+            </div>
+            <div class="form-field">
+              <label>تأكيد كلمة المرور الجديدة</label>
+              <input v-model="passwordForm.confirm" type="password" />
+            </div>
+          </div>
         </div>
 
-        <button class="btn btn-outline" @click="changePassword">تحديث كلمة المرور</button>
+        <button class="btn btn-primary" @click="changePassword" :disabled="isChangingPassword">تغيير كلمة المرور</button>
       </div>
     </section>
 
