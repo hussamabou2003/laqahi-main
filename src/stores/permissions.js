@@ -10,8 +10,8 @@ export const ROLES = {
 // الصلاحيات المتاحة لكل دور
 export const PERMISSIONS = {
   admin: ['doctors.manage', 'centers.manage', 'reports.export', 'settings.view', 'audit.view'],
-  doctor: [],
-  parent: []
+  doctor: ['parents.add', 'vaccines.give', 'reminders.send'],
+  parent: ['appointments.view']
 }
 
 // الصفحات المسموحة لكل دور (فارغة = مسموحة للجميع)

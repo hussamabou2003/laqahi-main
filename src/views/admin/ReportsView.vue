@@ -205,13 +205,16 @@ function handleExportPDF() {
   toast.success('تم التصدير', 'تم تنزيل ملف PDF بنجاح.')
 }
 
-/* ------- بيانات تبويب "الإشراف" ------- */
 const PERMISSION_LABELS = {
   'doctors.manage': 'إدارة الأطباء',
   'centers.manage': 'إدارة المراكز',
   'reports.export': 'تصدير التقارير',
   'settings.view': 'الوصول للإعدادات',
-  'audit.view': 'عرض سجل التدقيق'
+  'audit.view': 'عرض سجل التدقيق',
+  'parents.add': 'إضافة ولي أمر',
+  'vaccines.give': 'إعطاء اللقاح',
+  'reminders.send': 'إرسال التذكيرات',
+  'appointments.view': 'عرض المواعيد'
 }
 const roles = computed(() => {
   const totals = serverData.value?.totals || {}
@@ -557,24 +560,7 @@ const registeredAccounts = computed(() => {
           </table>
         </section>
 
-        <section class="card box-pad">
-          <h2 class="panel__title oversight-block-title">النسخ الاحتياطي</h2>
-          <div class="backup-row">
-            <div>
-              <p class="mini-card__label">إدارة النسخ الاحتياطية</p>
-              <p class="mini-card__value">حماية بيانات النظام</p>
-            </div>
-            <button class="btn btn-primary btn-xs" @click="router.push('/admin/backup')">انتقال للقسم</button>
-          </div>
-          <ul class="settings-list">
-            <li v-for="s in ['المصادقة الثنائية', 'سجل الدخول', 'صلاحيات API']" :key="s">
-              <span>{{ s }}</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="m9 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </li>
-          </ul>
-        </section>
+
       </div>
     </template>
   </AdminLayout>
@@ -1071,15 +1057,7 @@ const registeredAccounts = computed(() => {
   font-weight: 800;
 }
 
-.backup-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-surface-muted);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
+
 
 .cell-strong {
   font-weight: 700;
