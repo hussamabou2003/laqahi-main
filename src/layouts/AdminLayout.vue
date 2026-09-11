@@ -20,10 +20,11 @@ const navItems = computed(() => {
     { to: '/admin/doctors', label: 'إدارة الأطباء', match: 'admin-doctors', icon: 'doctors' },
     { to: '/admin/centers', label: 'مراكز اللقاحات', match: 'admin-centers', icon: 'pin' },
     { to: '/admin/inventory', label: 'مخزون اللقاحات', match: 'admin-inventory', icon: 'box' },
-    { to: '/admin/reports', label: 'التقارير', match: 'admin-reports', icon: 'chart' }
+    { to: '/admin/reports', label: 'التقارير', match: 'admin-reports', icon: 'chart' },
+    { to: '/admin/backup', label: 'النسخ الاحتياطي', match: 'admin-backup', icon: 'backup' }
   ]
   if (auth.user && ROUTE_ROLES.audit.includes(auth.user.role)) {
-    items.push({ to: '/admin/audit', label: 'سجل التدقيق', match: 'admin-audit', icon: 'audit' })
+    items.push({ to: '/admin/audit', label: 'سجل النشاطات', match: 'admin-audit', icon: 'audit' })
   }
   return items
 })
@@ -91,8 +92,11 @@ async function handleLogout() {
                 <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/>
               </svg>
               <svg v-else-if="item.icon === 'audit'" width="19" height="19" viewBox="0 0 24 24" fill="none">
-                <path d="M9 3h6l4 4v14H5V3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                <path d="M9 11h6M9 15h6M9 3v4H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M9 17h6M9 13h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+              <svg v-else-if="item.icon === 'backup'" width="19" height="19" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M12 16V4M8 8l4-4 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <svg v-else width="19" height="19" viewBox="0 0 24 24" fill="none">
                 <path d="M4 20V10M11 20V4M18 20v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>

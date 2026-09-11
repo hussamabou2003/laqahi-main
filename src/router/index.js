@@ -44,7 +44,7 @@ const router = createRouter({
     { path: '/doctor/notifications', name: 'doctor-notifications', component: NotificationsView, meta: { role: 'doctor' } },
     { path: '/doctor/reminders', name: 'doctor-reminders', component: DoctorReminders, meta: { role: 'doctor' } },
 
-    // مسارات مدير النظام (Admin)
+    // واجهات مدير النظام (Admin)
     { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboard, meta: { role: 'admin' } },
     { path: '/admin/centers', name: 'admin-centers', component: CentersView, meta: { role: 'admin' } },
     { path: '/admin/doctors', name: 'admin-doctors', component: DoctorsView, meta: { role: 'admin' } },
@@ -52,6 +52,7 @@ const router = createRouter({
     { path: '/admin/audit', name: 'admin-audit', component: AuditLogView, meta: { role: 'admin' } },
     { path: '/admin/reports', name: 'admin-reports', component: AdminReportsView, meta: { role: 'admin' } },
     { path: '/admin/inventory', name: 'admin-inventory', component: InventoryView, meta: { role: 'admin' } },
+    { path: '/admin/backup', name: 'admin-backup', component: () => import('../views/admin/BackupView.vue'), meta: { role: 'admin' } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue') }
   ]

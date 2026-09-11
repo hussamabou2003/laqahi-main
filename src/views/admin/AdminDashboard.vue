@@ -390,36 +390,22 @@ async function triggerBackup() {
           </ul>
         </div>
 
-        <!-- الإعدادات والنسخ الاحتياطي: في أقصى اليسار -->
+        <!-- النسخ الاحتياطي السريع تم نقله لصفحة مخصصة -->
         <div class="oversight__col">
           <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 22px;">
             <button @click="exportPdf" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;">
               تصدير PDF
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3v12m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-3 3m0 0-3-3m3 3V4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button @click="exportExcel" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;">
+            <button class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;" @click="exportExcel">
               تصدير Excel
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M14 3v4a1 1 0 0 0 1 1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M10 12l4 4m0 -4l-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-          </div>
-
-          <div class="backup-card">
-            <span class="backup-card__icon">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path d="M4 7a8 8 0 1 1 1.5 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                <path d="M4 3v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <p class="backup-card__label">النسخ الاحتياطي</p>
-            <p class="backup-card__status">{{ new Date().toLocaleDateString('ar-SA') }}</p>
-            <button class="btn btn-primary btn-xs backup-card__btn" @click="triggerBackup">سحب نسخة الآن</button>
           </div>
 
           <ul class="settings-list">

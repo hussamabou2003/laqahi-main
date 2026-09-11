@@ -121,8 +121,8 @@ const activityColors = { login: '#2f7fe0', doctor: '#22b06a', center: '#2bc37a',
 // إعدادات سريعة فعالة
 const quickSettings = [
   { label: 'إعدادات عامة', action: () => router.push('/admin/settings?tab=general') },
-  { label: 'إدارة الصلاحيات (حالة النظام)', action: () => router.push('/admin/settings?tab=security') },
-  { label: 'النسخ الاحتياطي', action: () => router.push('/admin/settings?tab=general') }
+  { label: 'الأمان والخصوصية (وضع الصيانة)', action: () => router.push('/admin/settings?tab=security') },
+  { label: 'النسخ الاحتياطي', action: () => router.push('/admin/backup') }
 ]
 
 // مراكز اللقاحات: تصنيف ذكي
@@ -548,13 +548,13 @@ const registeredAccounts = computed(() => doctorsStore.total)
         </section>
 
         <section class="card box-pad">
-          <h2 class="panel__title oversight-block-title">النسخ الاحتياطي والأمان</h2>
+          <h2 class="panel__title oversight-block-title">النسخ الاحتياطي</h2>
           <div class="backup-row">
             <div>
-              <p class="mini-card__label">آخر نسخة احتياطية</p>
-              <p class="mini-card__value">اليوم 03:00 صباحاً</p>
+              <p class="mini-card__label">إدارة النسخ الاحتياطية</p>
+              <p class="mini-card__value">حماية بيانات النظام</p>
             </div>
-            <button class="btn btn-primary btn-xs">تحديث الآن</button>
+            <button class="btn btn-primary btn-xs" @click="router.push('/admin/backup')">انتقال للقسم</button>
           </div>
           <ul class="settings-list">
             <li v-for="s in ['المصادقة الثنائية', 'سجل الدخول', 'صلاحيات API']" :key="s">
