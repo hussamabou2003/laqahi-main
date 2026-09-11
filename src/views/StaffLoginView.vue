@@ -35,8 +35,8 @@
 
       <form class="login-form" @submit.prevent="submit">
         <div class="form-field">
-          <label>اسم المستخدم</label>
-          <input v-model.trim="username" type="text" placeholder="أدخل اسم المستخدم" autocomplete="username" required />
+          <label>{{ selectedRole === 'doctor' ? 'حساب الطبيب' : 'حساب المدير' }}</label>
+          <input v-model.trim="username" type="text" :placeholder="selectedRole === 'doctor' ? 'أدخل حساب الطبيب' : 'أدخل حساب المدير'" autocomplete="username" required />
         </div>
 
         <div class="form-field">

@@ -185,35 +185,7 @@
       </div>
     </div>
 
-    <!-- إضافة أوقات متاحة للمواعيد -->
-    <section class="card availability-card full-width-rect">
-      <div class="availability-header">
-        <h2>إضافة أوقات متاحة للمواعيد</h2>
-      </div>
-      <div class="availability-content">
-        <form class="availability-form" @submit.prevent="handleAddSlot">
-          <label class="form-field inline-field">
-            <span>التاريخ</span>
-            <input v-model="newSlot.date" type="date" required />
-          </label>
-          <label class="form-field inline-field">
-            <span>الوقت</span>
-            <input v-model="newSlot.time" type="time" required />
-          </label>
-          <button type="submit" class="btn btn-primary">إضافة الوقت</button>
-        </form>
-        <div class="slots-scroll-area">
-          <ul v-if="availabilityStore.slots?.length" class="slots-preview horizontal-slots">
-            <li v-for="slot in availabilityStore.slots" :key="slot.id">
-              <span>{{ formatDate(slot.date) }} - {{ slot.time }}</span>
-              <button type="button" @click="availabilityStore.removeSlot(slot.id)" aria-label="حذف">
-                <i class="ti ti-trash"></i>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
+
 
     <!-- السجل اليومي -->
     <section class="card bottom-card">
@@ -780,13 +752,7 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long' })
 }
 
-const newSlot = reactive({ date: '', time: '' })
 
-function handleAddSlot() {
-  if (!newSlot.date || !newSlot.time) return
-  availabilityStore.addSlot(newSlot.date, newSlot.time)
-  Object.assign(newSlot, { date: '', time: '' })
-}
 </script>
 
 <style scoped>
@@ -888,23 +854,7 @@ function handleAddSlot() {
 .optgroup { font-weight: 700; color: #0f766e; }
 
 .full-width-rect { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
-.availability-content { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: nowrap; }
-.availability-form { display: flex; gap: 16px; align-items: flex-end; }
-.inline-field { margin-bottom: 0; min-width: 140px; }
-.add-btn { padding: 10px 24px; height: 38px; border-radius: 8px; background: #e2e8f0; color: #0f766e; border: none; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
-.slots-scroll-area {
-  flex: 1;
-  max-height: 80px;
-  overflow-y: auto;
-  padding-right: 8px;
-}
-.slots-scroll-area::-webkit-scrollbar { width: 6px; }
-.slots-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-.horizontal-slots { display: flex; flex-direction: row; flex-wrap: wrap; margin: 0; gap: 10px; align-items: flex-start; justify-content: flex-end; }
-.horizontal-slots li { background: #f8fafc; padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px; display: flex; gap: 12px; align-items: center; }
-.horizontal-slots button { color: #ef4444; background: transparent; border: none; cursor: pointer; }
 
 .pagination {
   display: flex;

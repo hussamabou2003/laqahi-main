@@ -101,8 +101,8 @@
               v-if="dose.status !== 'completed' && dose.status !== 'cancelled'"
               type="button"
               class="btn btn-primary btn-xs"
-              :disabled="completingDoseId === dose.id"
-              @click="completeDose(dose.id)"
+              :disabled="completingDoseId === dose.id || !isDoseSelectable(dose.date)"
+              @click="openDosePopup(dose.id)"
             >
               {{ completingDoseId === dose.id ? 'جارٍ التسجيل...' : 'تسجيل الجرعة' }}
             </button>
@@ -110,6 +110,26 @@
         </div>
         <p v-else class="no-data">لا توجد جرعات مجدولة لهذا الطفل.</p>
       </section>
+
+      <!-- شاشة منبثقة صغيرة لتسجيل الجرعة -->
+      <div v-if="dosePopupState.show" class="dose-popup-overlay" @click.self="closeDosePopup">
+        <div class="dose-popup">
+          <h3>معلومات الجرعة</h3>
+          <p class="dose-popup-subtitle">أدخل تفاصيل اللقاح لتسجيل الجرعة</p>
+          <div class="form-field">
+            <label>الشركة المصنعة</label>
+            <input v-model="dosePopupState.manufacturer" type="text" placeholder="اسم الشركة (مثال: Pfizer)" />
+          </div>
+          <div class="form-field">
+            <label>رقم التشغيلة</label>
+            <input v-model="dosePopupState.batchNumber" type="text" placeholder="رقم التشغيلة (Batch Number)" />
+          </div>
+          <div class="dose-popup-actions">
+            <button class="btn btn-outline" @click="closeDosePopup">إلغاء</button>
+            <button class="btn btn-primary" @click="confirmDoseSubmit">حفظ الجرعة</button>
+          </div>
+        </div>
+      </div>
     </div>
     
     <!-- مكون عرض بيانات الطفل -->
@@ -237,11 +257,42 @@ function doseStatusLabel(status) {
   return { completed: 'مكتملة', overdue: 'متأخرة', upcoming: 'قادمة', cancelled: 'ملغاة' }[status] || status
 }
 
-async function completeDose(doseId) {
+function isDoseSelectable(dateStr) {
+  if (!dateStr) return false
+  const doseDate = new Date(dateStr)
+  const allowDate = new Date(doseDate)
+  allowDate.setDate(allowDate.getDate() - 3)
+  return new Date() >= allowDate
+}
+
+const dosePopupState = ref({
+  show: false,
+  doseId: null,
+  manufacturer: '',
+  batchNumber: ''
+})
+
+function openDosePopup(doseId) {
+  dosePopupState.value = { show: true, doseId, manufacturer: '', batchNumber: '' }
+}
+
+function closeDosePopup() {
+  dosePopupState.value.show = false
+}
+
+async function confirmDoseSubmit() {
+  const { doseId, manufacturer, batchNumber } = dosePopupState.value
+  if (!manufacturer || !batchNumber) {
+    vaccineError.value = 'يرجى إدخال اسم الشركة المصنعة ورقم التشغيلة.'
+    return
+  }
+  
   completingDoseId.value = doseId
   vaccineError.value = ''
   try {
-    await childrenStore.confirmAttendance(selectedChildId.value, doseId)
+    // Send object with manufacturer and batch_number instead of just notes
+    await childrenStore.confirmAttendance(selectedChildId.value, doseId, { manufacturer, batch_number: batchNumber })
+    closeDosePopup()
   } catch (err) {
     vaccineError.value = err.message || 'تعذر تسجيل الجرعة'
   } finally {
@@ -344,6 +395,51 @@ function statusLabel(status) {
   color: var(--color-primary);
   font-size: 18px;
   padding: 8px 12px;
+}
+
+.form-error { color: var(--color-danger); font-size: 13px; text-align: center; margin-bottom: 12px; }
+
+/* Dose Popup Styles */
+.dose-popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dose-popup {
+  background: var(--color-white);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 320px;
+  border: 1px solid var(--color-border);
+}
+
+.dose-popup h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.dose-popup-subtitle {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.dose-popup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dose-popup-actions .btn {
+  flex: 1;
 }
 
 .records-table {

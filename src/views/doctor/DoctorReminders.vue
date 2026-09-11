@@ -53,17 +53,70 @@
           </div>
         </form>
       </section>
+
+      <!-- إضافة أوقات متاحة للمواعيد -->
+      <section class="card availability-card">
+        <div class="availability-header">
+          <h2>إضافة أوقات متاحة للمواعيد</h2>
+          <p class="form-desc">لوضع مواعيد تتاح مستقبلاً أو في نفس اليوم.</p>
+        </div>
+        <div class="availability-content">
+          <form class="availability-form" @submit.prevent="handleAddSlot">
+            <div class="form-row-inline">
+              <label class="form-field">
+                <span>التاريخ</span>
+                <input v-model="newSlot.date" type="date" :min="todayStr" required class="form-control" />
+              </label>
+              <label class="form-field">
+                <span>الوقت</span>
+                <input v-model="newSlot.time" type="time" required class="form-control" />
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 10px;">إضافة الوقت</button>
+          </form>
+
+          <div class="slots-scroll-area">
+            <ul v-if="availabilityStore.slots?.length" class="slots-preview horizontal-slots">
+              <li v-for="slot in availabilityStore.slots" :key="slot.id">
+                <span>{{ formatDate(slot.date) }} - {{ slot.time }}</span>
+                <button type="button" @click="availabilityStore.removeSlot(slot.id)" aria-label="حذف" class="btn-delete-slot">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </li>
+            </ul>
+            <p v-else class="no-slots">لا توجد أوقات متاحة مضافة.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </DoctorLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import DoctorLayout from '../../layouts/DoctorLayout.vue'
 import { useChildrenStore } from '../../stores/children'
+import { useAvailabilityStore } from '../../stores/availability'
 import { sendManualNotificationApi } from '../../utils/api'
 
 const childrenStore = useChildrenStore()
+const availabilityStore = useAvailabilityStore()
+
+const today = new Date()
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+const newSlot = reactive({ date: '', time: '' })
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long' })
+}
+
+function handleAddSlot() {
+  if (!newSlot.date || !newSlot.time) return
+  availabilityStore.addSlot(newSlot.date, newSlot.time)
+  Object.assign(newSlot, { date: '', time: '' })
+}
 
 const selectedChildId = ref('')
 const subject = ref('')
@@ -260,3 +313,17 @@ textarea.form-control {
   font-size: 20px;
 }
 </style>
+
+/* Availability Card Styles */
+.availability-card { margin-top: 10px; }
+.availability-header h2 { font-size: 18px; color: var(--color-teal-800); margin: 0 0 4px 0; }
+.form-row-inline { display: flex; gap: 16px; margin-bottom: 12px; }
+.form-row-inline .form-field { flex: 1; display: flex; flex-direction: column; }
+.form-row-inline .form-field span { font-size: 13px; font-weight: 700; color: var(--color-text-muted); margin-bottom: 6px; }
+.slots-scroll-area { margin-top: 24px; background: var(--color-bg); border: 1px dashed var(--color-border); padding: 16px; border-radius: 12px; }
+.horizontal-slots { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.horizontal-slots li { display: flex; align-items: center; gap: 12px; background: var(--color-white); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--color-border); font-size: 14px; font-weight: 600; }
+.btn-delete-slot { background: transparent; border: none; color: var(--color-danger); cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.btn-delete-slot:hover { background: var(--color-danger-light); }
+.no-slots { text-align: center; color: var(--color-text-soft); font-size: 14px; }
+

@@ -16,7 +16,7 @@ const isDownloading = ref(false)
 async function triggerBackup() {
   if (isDownloading.value) return
   isDownloading.value = true
-  
+
   try {
     const token = getToken()
     const headers = {}
@@ -25,22 +25,22 @@ async function triggerBackup() {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/backup?format=${backupFormat.value}`, {
       headers
     })
-    
+
     if (!res.ok) throw new Error('فشل جلب النسخة الاحتياطية')
-    
+
     const blob = await res.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    
+
     const ext = backupFormat.value === 'sql' ? 'sql' : 'json'
     a.download = `laqahi_backup_${new Date().toISOString().split('T')[0]}.${ext}`
-    
+
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
-    
+
     toast.success('تم بنجاح', `تم تحميل النسخة الاحتياطية بصيغة ${ext.toUpperCase()} بنجاح.`)
     audit.log('system', 'النسخ الاحتياطي', `سحب نسخة احتياطية بصيغة ${ext.toUpperCase()}`, auth.user?.name)
   } catch (err) {
@@ -78,7 +78,7 @@ async function triggerBackup() {
           </label>
           <label class="radio-label">
             <input type="radio" value="sql" v-model="backupFormat" />
-            <span class="radio-text">صيغة MySQL</span>
+            <span class="radio-text">صيغة SQL</span>
           </label>
         </div>
 
