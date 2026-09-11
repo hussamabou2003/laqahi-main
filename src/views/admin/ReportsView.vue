@@ -11,6 +11,7 @@ import { useToastStore } from '../../stores/toast'
 import { ROLES, PERMISSIONS } from '../../stores/permissions'
 import { exportCSV, exportPDF } from '../../utils/export'
 import { formatNumber, computeTrend } from '../../utils/format'
+import { getAdminReportsApi } from '../../utils/api'
 import Chart from 'chart.js/auto'
 
 const router = useRouter()
@@ -23,27 +24,45 @@ const toast = useToastStore()
 
 const activeTab = ref('reports') // 'reports' | 'oversight'
 
+// بيانات التقارير من السيرفر
+const serverData = ref({ totals: {}, coverage_per_center: [], children_report: [] })
+const isLoading = ref(true)
+
+async function fetchServerReports() {
+  isLoading.value = true
+  try {
+    const res = await getAdminReportsApi()
+    const data = res.data || res
+    serverData.value = data
+  } catch (err) {
+    toast.error('خطأ', 'فشل جلب إحصائيات التقارير')
+  } finally {
+    isLoading.value = false
+  }
+}
+
 function handleLogout() {
   auth.logout()
   toast.info('تم تسجيل الخروج', 'نراك قريباً 👋')
   router.push({ name: 'login' })
 }
 
-/* ------- الإحصائيات العلوية: كل رقم محسوب فعليًا من المتاجر، لا نص جامد ------- */
-const activeCentersLabel = computed(() => formatNumber(centersStore.activeCount))
+const activeCentersLabel = computed(() => formatNumber(serverData.value.totals.centers || centersStore.activeCount))
 const regionsFooter = computed(() => `في ${centersStore.regionsCount} مناطق إدارية`)
 
-const coverageRate = computed(() => childrenStore.coverageRate)
+const coverageRate = computed(() => {
+  const t = serverData.value.totals
+  if (!t.doses_scheduled || t.doses_scheduled === 0) return childrenStore.coverageRate
+  return Math.round((t.doses_completed / t.doses_scheduled) * 100)
+})
 
-const registeredChildrenLabel = computed(() => formatNumber(childrenStore.totalRegistered))
+const registeredChildrenLabel = computed(() => formatNumber(serverData.value.totals.children || childrenStore.totalRegistered))
 const registeredTrend = computed(() => computeTrend(childrenStore.registeredThisWeek, childrenStore.registeredPreviousWeek))
 
-const totalVaccinesLabel = computed(() => formatNumber(childrenStore.totalVaccinesAdministered))
+const totalVaccinesLabel = computed(() => formatNumber(serverData.value.totals.doses_completed || childrenStore.totalVaccinesAdministered))
 const vaccinesTrend = computed(() => computeTrend(childrenStore.vaccinesThisWeek, childrenStore.vaccinesPreviousWeek))
 
-/* ------- بيانات تبويب "التقارير المتقدمة" ------- */
-const chartRange = ref('يومي') // يومي | شهري
-
+const chartRange = ref('يومي')
 const chartCanvas = ref(null)
 let chartInstance = null
 
@@ -54,78 +73,88 @@ function currentSeries() {
 function renderChart() {
   if (!chartCanvas.value) return
   const dataset = currentSeries()
-
   if (chartInstance) {
     chartInstance.data.labels = dataset.labels
     chartInstance.data.datasets[0].data = dataset.values
     chartInstance.update()
     return
   }
-
   chartInstance = new Chart(chartCanvas.value, {
     type: 'bar',
     data: {
       labels: dataset.labels,
-      datasets: [
-        {
-          label: 'عدد الجرعات',
-          data: dataset.values,
-          backgroundColor: '#a9d9c3',
-          hoverBackgroundColor: '#0e6b52',
-          borderRadius: 8,
-          maxBarThickness: 42
-        }
-      ]
+      datasets: [{ label: 'عدد الجرعات', data: dataset.values, backgroundColor: '#a9d9c3', hoverBackgroundColor: '#0e6b52', borderRadius: 8, maxBarThickness: 42 }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          rtl: true,
-          bodyFont: { family: 'Tajawal' },
-          titleFont: { family: 'Tajawal' },
-          callbacks: {
-            label: (ctx) => `${ctx.formattedValue} جرعة`
-          }
-        }
-      },
-      scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { family: 'Tajawal' } } },
-        x: { grid: { display: false }, ticks: { font: { family: 'Tajawal' } } }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { rtl: true, bodyFont: { family: 'Tajawal' }, titleFont: { family: 'Tajawal' }, callbacks: { label: (ctx) => `${ctx.formattedValue} جرعة` } } },
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { family: 'Tajawal' } } }, x: { grid: { display: false }, ticks: { font: { family: 'Tajawal' } } } }
     }
   })
 }
 
-onMounted(() => nextTick(renderChart))
+onMounted(async () => {
+  await fetchServerReports()
+  nextTick(renderChart)
+})
 watch(chartRange, () => nextTick(renderChart))
 onBeforeUnmount(() => chartInstance?.destroy())
 
-const reportTypes = ['تقرير اللقاحات الشهري', 'تقرير التسجيل الأسبوعي', 'تقرير المراكز والتغطية']
-const selectedReport = ref(reportTypes[0])
-const dateFrom = ref('2024-05-21')
-const dateTo = ref('2024-05-21')
+const reportTypes = [
+  'تقرير اللقاحات الشهري',
+  'تقرير التسجيل الأسبوعي',
+  'تقرير المراكز والتغطية',
+  'تقرير أطفال المراكز واللقاحات',
+  'تقرير الحالات المنتهية'
+]
+const selectedReport = ref(reportTypes[3])
+const dateFrom = ref(new Date().toISOString().split('T')[0])
+const dateTo = ref(new Date().toISOString().split('T')[0])
 
 const recentActivities = computed(() => audit.entries.slice(0, 4))
 const activityColors = { login: '#2f7fe0', doctor: '#22b06a', center: '#2bc37a', report: '#7c6ee8', settings: '#93a19c' }
 
 const quickSettings = ['إعدادات عامة', 'إدارة الصلاحيات', 'النسخ الاحتياطي']
 
-const reportCenters = computed(() => centersStore.list.slice(0, 2))
-
-function reportRows() {
-  if (selectedReport.value === reportTypes[2]) {
-    return centersStore.list.map((c) => [c.name, c.location, c.status, `${c.capacityPerDay} طفل/يوم`])
+function reportHeaders() {
+  const type = selectedReport.value
+  let headers = []
+  if (type === 'تقرير المراكز والتغطية') {
+    headers = ['اسم المركز', 'عدد الأطفال', 'الجرعات المجدولة', 'المكتملة', 'المتأخرة', 'نسبة التغطية']
+  } else if (type === 'تقرير أطفال المراكز واللقاحات') {
+    headers = ['اسم الطفل', 'المركز', 'تاريخ الميلاد', 'اللقاحات المعطاة (%)', 'الجرعات المتأخرة', 'الجرعات المتبقية']
+  } else if (type === 'تقرير الحالات المنتهية') {
+    headers = ['اسم الطفل', 'المركز', 'تاريخ الميلاد', 'الحالة']
+  } else {
+    // Default fallback
+    headers = ['اسم الطبيب', 'المركز', 'الصلاحية', 'البريد الإلكتروني']
   }
-  return doctorsStore.list.map((d) => [d.name, d.center, d.role, d.email])
+  return ['#', ...headers] // دائماً نضيف عمود الترقيم
 }
 
-function reportHeaders() {
-  return selectedReport.value === reportTypes[2]
-    ? ['اسم المركز', 'الموقع', 'الحالة', 'الطاقة الاستيعابية']
-    : ['اسم الطبيب', 'المركز', 'الصلاحية', 'البريد الإلكتروني']
+function reportRows() {
+  const type = selectedReport.value
+  let rows = []
+  
+  if (type === 'تقرير المراكز والتغطية') {
+    rows = serverData.value.coverage_per_center.map(c => [
+      c.center_name, c.children_count, c.doses_scheduled, c.doses_completed, c.doses_overdue, c.coverage_percentage + '%'
+    ])
+  } else if (type === 'تقرير أطفال المراكز واللقاحات') {
+    rows = serverData.value.children_report.map(c => [
+      c.name, c.center_name, c.birth_date, c.percentage + '%', c.overdue, c.remaining
+    ])
+  } else if (type === 'تقرير الحالات المنتهية') {
+    const completed = serverData.value.children_report.filter(c => c.is_completed)
+    rows = completed.map(c => [
+      c.name, c.center_name, c.birth_date, 'منتهية (100%)'
+    ])
+  } else {
+    rows = doctorsStore.list.map(d => [d.name, d.center, d.role, d.email])
+  }
+
+  // إضافة الترقيم
+  return rows.map((row, index) => [index + 1, ...row])
 }
 
 function generateReport() {
@@ -157,10 +186,6 @@ const roles = Object.values(ROLES).map((r) => ({
   permissions: (PERMISSIONS[r.key] || []).map((p) => PERMISSION_LABELS[p] || p).join('، ') || 'عرض فقط',
   count: roleCounts[r.key] || 0
 }))
-
-// "المستخدمين النشطين" بالمعنى الحرفي (متصل الآن) يتطلب تتبع جلسات فعلي من خادم
-// (WebSocket أو ما شابه) — وهذا فعلاً عمل باك-إند، لا يمكن حسابه من المتصفح فقط.
-// لذلك نعرض بدلًا منه رقمًا حقيقيًا وواقعيًا 100%: إجمالي حسابات الأطباء المسجّلة فعليًا.
 const registeredAccounts = computed(() => doctorsStore.total)
 </script>
 
@@ -235,6 +260,42 @@ const registeredAccounts = computed(() => doctorsStore.total)
           </p>
         </div>
       </div>
+
+      <!-- إحصائيات المراكز كلوحة تحكم -->
+      <section class="card box-pad" style="margin-bottom: 20px;">
+        <h2 class="panel__title" style="margin-bottom: 16px;">إحصائيات المراكز والتغطية</h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 13.5px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--color-border);">
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">المركز</th>
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">الأطفال</th>
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">المجدولة</th>
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">المكتملة</th>
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">المتأخرة</th>
+                <th style="padding: 12px; font-weight: 700; color: var(--color-text-muted);">التغطية</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in serverData.coverage_per_center" :key="c.center_id" style="border-bottom: 1px solid var(--color-border);">
+                <td style="padding: 12px; font-weight: 600;">{{ c.center_name }}</td>
+                <td style="padding: 12px;">{{ c.children_count }}</td>
+                <td style="padding: 12px; color: var(--color-info-600);">{{ c.doses_scheduled }}</td>
+                <td style="padding: 12px; color: var(--color-green-700); font-weight: 700;">{{ c.doses_completed }}</td>
+                <td style="padding: 12px; color: var(--color-danger-600); font-weight: 700;">{{ c.doses_overdue }}</td>
+                <td style="padding: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="min-width: 32px; font-weight: 700;">{{ c.coverage_percentage }}%</span>
+                    <div style="height: 6px; width: 60px; background: var(--color-surface-muted); border-radius: 999px; overflow: hidden;">
+                      <div style="height: 100%; background: var(--color-green-600);" :style="{ width: c.coverage_percentage + '%' }"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div class="mid-grid">
         <!-- إحصائيات سير العمل -->
