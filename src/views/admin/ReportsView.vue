@@ -164,7 +164,7 @@ function generateReport() {
 
 function handleExportCSV() {
   exportCSV(selectedReport.value, reportHeaders(), reportRows())
-  toast.success('تم التصدير', 'تم تنزيل ملف Excel (CSV) بنجاح.')
+  toast.success('تم التصدير', 'تم تنزيل ملف Excel بنجاح.')
 }
 
 function handleExportPDF() {

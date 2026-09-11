@@ -1,25 +1,27 @@
+import * as XLSX from 'xlsx'
+
 /**
- * تصدير مصفوفة بيانات إلى ملف CSV حقيقي (تنزيل فعلي عبر المتصفح)
- * @param {string} filename اسم الملف بدون امتداد
+ * تصدير البيانات إلى ملف Excel حقيقي (.xlsx) بدلاً من CSV
+ * @param {string} filename اسم الملف
  * @param {string[]} headers عناوين الأعمدة
- * @param {Array<Array<string|number>>} rows صفوف البيانات
+ * @param {Array<Array<string|number>>} rows مصفوفة البيانات
  */
 export function exportCSV(filename, headers, rows) {
-  const escape = (val) => {
-    const str = String(val ?? '')
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
-  }
+  // دمج العناوين مع البيانات في مصفوفة واحدة
+  const data = [headers, ...rows]
+  
+  // إنشاء ورقة عمل (Worksheet) من المصفوفة
+  const ws = XLSX.utils.aoa_to_sheet(data)
+  
+  // اتجاه الصفحة من اليمين لليسار (للغة العربية)
+  ws['!dir'] = 'rtl'
 
-  // BOM لدعم عرض النصوص العربية بشكل صحيح في Excel
-  const bom = '\uFEFF'
-  const lines = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))]
-  const csvContent = bom + lines.join('\r\n')
+  // إنشاء كتاب عمل (Workbook) وإضافة الورقة إليه
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'البيانات')
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  downloadBlob(blob, `${filename}.csv`)
+  // حفظ الملف وتنزيله
+  XLSX.writeFile(wb, `${filename}.xlsx`)
 }
 
 /**
