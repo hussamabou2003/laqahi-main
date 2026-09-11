@@ -94,7 +94,10 @@ function renderChart() {
 }
 
 onMounted(async () => {
-  await fetchServerReports()
+  await Promise.all([
+    fetchServerReports(),
+    audit.fetchAuditLogs()
+  ])
   nextTick(renderChart)
 })
 watch(chartRange, () => nextTick(renderChart))
@@ -111,10 +114,40 @@ const selectedReport = ref(reportTypes[3])
 const dateFrom = ref(new Date().toISOString().split('T')[0])
 const dateTo = ref(new Date().toISOString().split('T')[0])
 
+// سجل النشاطات المباشر
 const recentActivities = computed(() => audit.entries.slice(0, 4))
-const activityColors = { login: '#2f7fe0', doctor: '#22b06a', center: '#2bc37a', report: '#7c6ee8', settings: '#93a19c' }
+const activityColors = { login: '#2f7fe0', doctor: '#22b06a', center: '#2bc37a', report: '#7c6ee8', settings: '#93a19c', parents: '#e28743', children: '#e24381', inventory: '#8d43e2' }
 
-const quickSettings = ['إعدادات عامة', 'إدارة الصلاحيات', 'النسخ الاحتياطي']
+// إعدادات سريعة فعالة
+const quickSettings = [
+  { label: 'إعدادات عامة', action: () => router.push('/admin/settings?tab=general') },
+  { label: 'إدارة الصلاحيات (حالة النظام)', action: () => router.push('/admin/settings?tab=security') },
+  { label: 'النسخ الاحتياطي', action: () => router.push('/admin/settings?tab=general') }
+]
+
+// مراكز اللقاحات: تصنيف ذكي
+const centersFilter = ref('active') // 'active', 'overdue'
+
+const topCenters = computed(() => {
+  let list = [...serverData.value.coverage_per_center]
+  if (centersFilter.value === 'active') {
+    list.sort((a, b) => b.coverage_percentage - a.coverage_percentage)
+  } else {
+    list.sort((a, b) => b.doses_overdue - a.doses_overdue)
+  }
+  return list.slice(0, 3).map(c => ({
+    name: c.center_name,
+    coverage: c.coverage_percentage,
+    badge: centersFilter.value === 'active' ? 'الأكثر إنجازاً' : 'تحتاج انتباه',
+    badgeClass: centersFilter.value === 'active' ? 'badge-success' : 'badge-danger',
+    doses: c.doses_completed,
+    overdue: c.doses_overdue
+  }))
+})
+
+function toggleCentersFilter() {
+  centersFilter.value = centersFilter.value === 'active' ? 'overdue' : 'active'
+}
 
 function reportHeaders() {
   const type = selectedReport.value
@@ -432,14 +465,15 @@ const registeredAccounts = computed(() => doctorsStore.total)
               </span>
               <span class="activity-row__time">{{ a.time }}</span>
             </li>
+            <li v-if="!recentActivities.length" class="empty-state">لا توجد نشاطات مسجلة بعد</li>
           </ul>
 
           <div class="section-divider"></div>
 
           <p class="quick-settings-title">إعدادات النظام السريعة</p>
           <ul class="settings-list">
-            <li v-for="s in quickSettings" :key="s">
-              <span>{{ s }}</span>
+            <li v-for="s in quickSettings" :key="s.label" @click="s.action" style="cursor: pointer;">
+              <span>{{ s.label }}</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="m9 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -447,43 +481,36 @@ const registeredAccounts = computed(() => doctorsStore.total)
           </ul>
         </section>
 
-        <!-- مراكز اللقاحات -->
+        <!-- مراكز اللقاحات: تصنيف ذكي -->
         <section class="card box-pad">
           <div class="panel__head">
             <h2 class="panel__title">مراكز اللقاحات</h2>
-            <button class="icon-btn" aria-label="تصفية">
+            <button class="icon-btn" aria-label="تصفية" @click="toggleCentersFilter" :class="{'text-primary': centersFilter === 'overdue'}">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                 <path d="M4 5h16l-6 8v6l-4 2v-8L4 5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
           <div class="center-list">
-            <article v-for="c in reportCenters" :key="c.name" class="center-item">
-              <div class="center-item__image">
-               <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=300&h=300&fit=crop" :alt="c.name" loading="lazy" />
-               <span class="badge badge-success center-item__badge">نشط</span>
-              </div>
-              <div class="center-item__body">
-                <h3>{{ c.name }}</h3>
-                <p class="center-item__loc">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22Z" stroke="currentColor" stroke-width="1.6"/>
-                  </svg>
-                  {{ c.location }}
-                </p>
-                <div class="center-item__meta">
+            <article v-for="c in topCenters" :key="c.name" class="center-item">
+              <div class="center-item__body" style="padding-right: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h3 style="margin: 0; font-size: 15px;">{{ c.name }}</h3>
+                  <span class="badge" :class="c.badgeClass">{{ c.badge }}</span>
+                </div>
+                <div class="center-item__meta" style="margin-top: 10px;">
                   <div>
-                    <p class="meta-label">ساعات العمل</p>
-                    <p class="meta-value">{{ c.hours }}</p>
+                    <p class="meta-label">الجرعات المتأخرة</p>
+                    <p class="meta-value" style="color: var(--color-danger-600);">{{ c.overdue }} طفل</p>
                   </div>
                   <div>
-                    <p class="meta-label">الطاقة الاستيعابية</p>
-                    <p class="meta-value">{{ c.capacityPerDay }} طفل/يوم</p>
+                    <p class="meta-label">نسبة التغطية</p>
+                    <p class="meta-value" style="color: var(--color-green-700);">{{ c.coverage }}%</p>
                   </div>
                 </div>
-                <span class="badge badge-success ready-badge">مكتمل التجهيز ✓</span>
               </div>
             </article>
+            <div v-if="!topCenters.length" class="empty-state">لا يوجد بيانات للمراكز حالياً</div>
           </div>
         </section>
       </div>
