@@ -25,7 +25,7 @@ const toast = useToastStore()
 const activeTab = ref('reports') // 'reports' | 'oversight'
 
 // بيانات التقارير من السيرفر
-const serverData = ref({ totals: {}, coverage_per_center: [], children_report: [] })
+const serverData = ref({ totals: {}, coverage_per_center: [], children_report: [], low_stock_warnings: [] })
 const isLoading = ref(true)
 
 async function fetchServerReports() {
@@ -399,15 +399,15 @@ const registeredAccounts = computed(() => doctorsStore.total)
             </button>
           </div>
 
-          <div class="alert-box">
+          <div v-if="serverData.low_stock_warnings?.length" class="alert-box">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               <path d="M12 10v4M12 17h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
             <div>
               <p class="alert-box__title">تنبيه توريد اللقاحات</p>
-              <p class="alert-box__desc">
-                يوجد انخفاض في مخزون MMR في مركز النور الصحي بنسبة 15%.
+              <p class="alert-box__desc" v-for="(warn, idx) in serverData.low_stock_warnings" :key="idx">
+                {{ warn }}
               </p>
             </div>
           </div>
