@@ -87,24 +87,14 @@ async function triggerBackup() {
           <span v-else>سحب نسخة الآن</span>
         </button>
       </section>
-
-      <section class="card info-card">
-        <h3 class="info-card__title">ملاحظات هامة حول النسخ الاحتياطي:</h3>
-        <ul class="info-list">
-          <li><strong>صيغة JSON:</strong> مناسبة لقراءتها بشكل نصي أو استخدامها في تطبيقات أخرى كـ API.</li>
-          <li><strong>صيغة MySQL:</strong> الخيار الأفضل لإعادة استعادة قاعدة البيانات (Restore) على نفس الخادم أو خادم جديد.</li>
-          <li>يُنصح بسحب نسخة احتياطية بشكل دوري (أسبوعياً على الأقل) والاحتفاظ بها في مكان آمن.</li>
-        </ul>
-      </section>
     </div>
   </AdminLayout>
 </template>
 
 <style scoped>
 .backup-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  display: flex;
+  justify-content: center;
   margin-top: 24px;
 }
 
@@ -115,6 +105,8 @@ async function triggerBackup() {
   justify-content: center;
   padding: 40px 24px;
   background: var(--color-surface-muted);
+  width: 100%;
+  max-width: 500px;
 }
 
 .backup-card__icon {
@@ -170,30 +162,5 @@ async function triggerBackup() {
   max-width: 300px;
   font-size: 15px;
   padding: 12px;
-}
-
-.info-card {
-  padding: 30px;
-}
-
-.info-card__title {
-  font-size: 16px;
-  font-weight: 800;
-  margin-bottom: 16px;
-  color: var(--color-danger-700);
-}
-
-.info-list {
-  list-style-type: disc;
-  padding-right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.info-list li {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-text-muted);
 }
 </style>
