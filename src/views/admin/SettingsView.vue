@@ -129,29 +129,30 @@ async function killSessions() {
     <!-- عام -->
     <section v-if="activeTab === 'general'" class="card box-pad">
       <h2 class="panel__title">الإعدادات العامة</h2>
-      <p class="panel__desc">معلومات أساسية تظهر في واجهة النظام.</p>
+      <p class="panel__desc">معلومات أساسية تظهر في واجهة النظام والتحكم بوضع الصيانة.</p>
 
-      <div class="form-field">
-        <label>اسم النظام</label>
-        <input v-model="generalForm.systemName" type="text" />
+      <div class="switch-row" style="margin-bottom: 20px; border-bottom: none; background: #fff3cd; padding: 16px; border-radius: 8px;">
+        <div>
+          <p class="switch-row__label" style="color: #856404;">وضع الصيانة (إيقاف النظام مؤقتاً)</p>
+          <p class="switch-row__desc" style="color: #856404;">تفعيل هذا الخيار سيمنع جميع الأطباء والأهالي من استخدام النظام حتى تقوم بإلغائه.</p>
+        </div>
+        <button class="switch" :class="{ 'switch--on': settings.maintenance_mode === 'true' }" @click="settings.maintenance_mode = settings.maintenance_mode === 'true' ? 'false' : 'true'">
+          <span class="switch__thumb"></span>
+        </button>
       </div>
 
       <div class="form-row">
         <div class="form-field">
-          <label>المنطقة الزمنية</label>
-          <select v-model="generalForm.timezone">
-            <option v-for="tz in timezones" :key="tz.value" :value="tz.value">{{ tz.label }}</option>
-          </select>
+          <label>رقم هاتف الدعم الفني</label>
+          <input v-model="settings.support_phone" type="text" dir="ltr" />
         </div>
         <div class="form-field">
-          <label>لغة الواجهة</label>
-          <select v-model="generalForm.language" disabled>
-            <option value="ar">العربية</option>
-          </select>
+          <label>البريد الإلكتروني للدعم</label>
+          <input v-model="settings.support_email" type="email" dir="ltr" />
         </div>
       </div>
 
-      <button class="btn btn-primary" @click="saveGeneral">حفظ التغييرات</button>
+      <button class="btn btn-primary" @click="saveGeneral" :disabled="settings.loading">حفظ الإعدادات العامة</button>
     </section>
 
     <!-- الإشعارات -->
