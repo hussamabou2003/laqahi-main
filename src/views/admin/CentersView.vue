@@ -9,6 +9,7 @@ import { useToastStore } from '../../stores/toast'
 import { formatNumber, formatCompact } from '../../utils/format'
 import { useRoute } from 'vue-router'
 import { onMounted } from 'vue'
+import GovernorateSelect from '../../components/GovernorateSelect.vue'
 
 const route = useRoute()
 const centersStore = useCentersStore()
@@ -18,7 +19,7 @@ const toast = useToastStore()
 
 const canManage = computed(() => auth.can('centers.manage'))
 
-/* ---------------- الإحصائيات العلوية: محسوبة فعليًا من متجر المراكز ---------------- */
+/* ---------------- الإحصائيات العلوية ---------------- */
 const capacityLabel = computed(() => `${formatCompact(centersStore.totalDailyCapacity)} طفل/يوم`)
 const utilizationTrend = computed(() => {
   if (!centersStore.totalDailyCapacity) return '—'
@@ -34,8 +35,13 @@ const inactiveCentersFooter = computed(() =>
 const totalCentersLabel = computed(() => formatNumber(centersStore.total))
 const regionsFooter = computed(() => `في ${centersStore.regionsCount} مناطق إدارية`)
 
-const regions = ['منطقة حمص', 'منطقة حلب', 'منطقة دمشق', 'منطقة اللاذقية']
-const selectedRegion = ref(regions[0])
+const GOVERNORATES = [
+  'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
+  'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة',
+  'درعا', 'السويداء', 'القنيطرة'
+]
+
+const selectedRegion = ref(GOVERNORATES[0])
 const facilityType = ref('حكومي') // حكومي | خاص
 
 async function deleteCenter(center) {
@@ -48,14 +54,15 @@ async function deleteCenter(center) {
   }
 }
 
-/* ---------------- لوحة التعديل السريع / الإضافة: داخل نفس البطاقة الجانبية ---------------- */
+/* ---------------- لوحة التعديل السريع / الإضافة ---------------- */
 const statusOptions = ['نشط', 'مغلق مؤقتاً']
 const panelMode = ref(null) // null | 'edit' | 'add'
 const editingCenterId = ref(null)
-const centerForm = reactive({ name: '', location: '', phone: '', status: statusOptions[0] })
+const centerForm = reactive({ name: '', province: '', location: '', phone: '', status: statusOptions[0] })
 
 function resetCenterForm() {
   centerForm.name = ''
+  centerForm.province = ''
   centerForm.location = ''
   centerForm.phone = ''
   centerForm.status = statusOptions[0]
@@ -74,6 +81,8 @@ function selectCenterForEdit(center) {
   panelMode.value = 'edit'
   editingCenterId.value = center.id
   Object.assign(centerForm, center)
+  // Ensure province is populated if available
+  if (center.province) centerForm.province = center.province
   setTimeout(() => {
     document.querySelector('.quick-edit-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, 150)
@@ -85,14 +94,15 @@ function cancelPanel() {
 }
 
 async function savePanel() {
-  if (!centerForm.name.trim() || !centerForm.location.trim()) {
-    toast.error('بيانات ناقصة', 'يرجى تعبئة اسم المركز والموقع على الأقل.')
+  if (!centerForm.name.trim() || !centerForm.location.trim() || !centerForm.province) {
+    toast.error('بيانات ناقصة', 'يرجى تعبئة اسم المركز والمحافظة والموقع.')
     return
   }
 
   try {
     const payload = {
       name: centerForm.name,
+      province: centerForm.province,
       address: centerForm.location,
       phone: centerForm.phone
     }
@@ -118,7 +128,8 @@ function openMap() {
 }
 
 function openCenterMap(center) {
-  const query = `${center.name} ${center.location}`
+  const provinceStr = center.province ? `${center.province} ` : ''
+  const query = `${center.name} ${provinceStr}${center.location}`
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank')
 }
 
@@ -267,9 +278,7 @@ onMounted(async () => {
         </h2>
 
         <label class="field-label">اسم المنطقة</label>
-        <select v-model="selectedRegion" class="select">
-          <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
-        </select>
+        <GovernorateSelect v-model="selectedRegion" />
 
         <label class="field-label">نوع المرفق</label>
         <div class="toggle-group">
@@ -333,8 +342,13 @@ onMounted(async () => {
           </div>
 
           <div class="form-field">
-            <label>الموقع</label>
-            <input v-model="centerForm.location" type="text" placeholder="مثال: دمشق - المزة" />
+            <label>المحافظة</label>
+            <GovernorateSelect v-model="centerForm.province" placeholder="اختر المحافظة السورية" />
+          </div>
+
+          <div class="form-field">
+            <label>الموقع التفصيلي</label>
+            <input v-model="centerForm.location" type="text" placeholder="مثال: دمشق - المزة - مقابل البلدية" />
           </div>
 
           <div class="form-row">
