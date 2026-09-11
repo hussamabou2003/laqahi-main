@@ -207,7 +207,9 @@ async function handleSubmit() {
       password: guardian.password,
       password_confirmation: guardian.password,
       national_id: guardian.nationalId,
-      phone: guardian.phone
+      phone: guardian.phone,
+      province: location.city,
+      center_id: location.centerId
     })
 
     // 2. إضافة الطفل لولي الأمر
