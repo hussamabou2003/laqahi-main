@@ -77,7 +77,11 @@ async function removeDoctor(doctor) {
   }
 }
 
-const settingsLinks = ['إعدادات عامة', 'إعدادات التنبيهات', 'الأمان والخصوصية']
+const settingsLinks = [
+  { label: 'إعدادات عامة', tab: 'general' },
+  { label: 'إعدادات التنبيهات', tab: 'notifications' },
+  { label: 'الأمان والخصوصية', tab: 'security' }
+]
 
 const query = ref('')
 
@@ -419,15 +423,15 @@ async function triggerBackup() {
           </div>
 
           <ul class="settings-list">
-            <li v-for="s in settingsLinks" :key="s">
-              <router-link v-if="auth.can('settings.view')" to="/settings" class="settings-list__link">
-                <span>{{ s }}</span>
+            <li v-for="s in settingsLinks" :key="s.tab">
+              <router-link v-if="auth.can('settings.view')" :to="`/settings?tab=${s.tab}`" class="settings-list__link">
+                <span>{{ s.label }}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </router-link>
               <template v-else>
-                <span>{{ s }}</span>
+                <span>{{ s.label }}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>

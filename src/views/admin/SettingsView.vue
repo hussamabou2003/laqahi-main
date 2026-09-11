@@ -7,12 +7,15 @@ import { useToastStore } from '../../stores/toast'
 import { useAuditStore } from '../../stores/audit'
 import { useAuthStore } from '../../stores/auth'
 import { getToken } from '../../utils/api'
+import { useRoute, useRouter } from 'vue-router'
 
 const settings = useSettingsStore()
 const theme = useThemeStore()
 const toast = useToastStore()
 const audit = useAuditStore()
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 
 const tabs = [
   { key: 'general', label: 'عام' },
@@ -20,11 +23,16 @@ const tabs = [
   { key: 'security', label: 'الأمان' },
   { key: 'appearance', label: 'المظهر' }
 ]
-const activeTab = ref('general')
+const activeTab = ref(route.query.tab || 'general')
 
 onMounted(async () => {
   await settings.fetchSettings()
 })
+
+function updateTab(tabKey) {
+  activeTab.value = tabKey
+  router.replace({ query: { ...route.query, tab: tabKey } })
+}
 
 async function saveGeneral() {
   try {
@@ -112,7 +120,7 @@ async function killSessions() {
         :key="t.key"
         class="tab"
         :class="{ 'tab--active': activeTab === t.key }"
-        @click="activeTab = t.key"
+        @click="updateTab(t.key)"
       >
         {{ t.label }}
       </button>
