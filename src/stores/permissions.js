@@ -2,22 +2,22 @@
 // هذا الملف هو المصدر الوحيد للحقيقة بخصوص من يستطيع فعل ماذا في الواجهة.
 
 export const ROLES = {
-  admin: { key: 'admin', label: 'مدير النظام' },
-  manager: { key: 'manager', label: 'مسؤول طبي' },
-  doctor: { key: 'doctor', label: 'طبيب تطعيمات' }
+  admin: { key: 'admin', label: 'حساب المدير' },
+  doctor: { key: 'doctor', label: 'الطبيب' },
+  parent: { key: 'parent', label: 'ولي الأمر' }
 }
 
 // الصلاحيات المتاحة لكل دور
 export const PERMISSIONS = {
   admin: ['doctors.manage', 'centers.manage', 'reports.export', 'settings.view', 'audit.view'],
-  manager: ['doctors.manage', 'centers.manage', 'reports.export', 'audit.view'],
-  doctor: []
+  doctor: [],
+  parent: []
 }
 
 // الصفحات المسموحة لكل دور (فارغة = مسموحة للجميع)
 export const ROUTE_ROLES = {
   settings: ['admin'],
-  audit: ['admin', 'manager']
+  audit: ['admin']
 }
 
 export function can(role, action) {

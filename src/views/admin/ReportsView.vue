@@ -213,13 +213,23 @@ const PERMISSION_LABELS = {
   'settings.view': 'الوصول للإعدادات',
   'audit.view': 'عرض سجل التدقيق'
 }
-const roleCounts = { admin: 3, manager: 18, doctor: 132 }
-const roles = Object.values(ROLES).map((r) => ({
-  name: r.label,
-  permissions: (PERMISSIONS[r.key] || []).map((p) => PERMISSION_LABELS[p] || p).join('، ') || 'عرض فقط',
-  count: roleCounts[r.key] || 0
-}))
-const registeredAccounts = computed(() => doctorsStore.total)
+const roles = computed(() => {
+  const totals = serverData.value?.totals || {}
+  const roleCounts = {
+    admin: totals.admins || 1, // Fallback if 0 for some reason
+    doctor: totals.doctors || 0,
+    parent: totals.parents || 0
+  }
+  return Object.values(ROLES).map((r) => ({
+    name: r.label,
+    permissions: (PERMISSIONS[r.key] || []).map((p) => PERMISSION_LABELS[p] || p).join('، ') || 'عرض فقط',
+    count: roleCounts[r.key] || 0
+  }))
+})
+const registeredAccounts = computed(() => {
+  const totals = serverData.value?.totals || {}
+  return (totals.admins || 0) + (totals.doctors || 0) + (totals.parents || 0)
+})
 </script>
 
 <template>
