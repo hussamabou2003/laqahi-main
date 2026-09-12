@@ -314,10 +314,11 @@ export const useChildrenStore = defineStore('children', {
     },
 
     async addDoseToChild(childId, dose) {
+      const timeString = (dose.time || '09:00').substring(0, 5) + ':00';
       const res = await createDoctorAppointmentApi({
         child_id: Number(childId),
         vaccine_id: Number(dose.vaccineId),
-        appointment_date: `${dose.date} ${dose.time || '09:00'}:00`,
+        appointment_date: `${dose.date} ${timeString}`,
         status: dose.status === 'completed' ? 'completed' : 'booked',
         notes: dose.notes || null
       })
@@ -326,8 +327,9 @@ export const useChildrenStore = defineStore('children', {
     },
 
     async updateDose(childId, doseId, dose) {
+      const timeString = (dose.time || '09:00').substring(0, 5) + ':00';
       const res = await updateDoctorAppointmentApi(doseId, {
-        appointment_date: `${dose.date} ${dose.time || '09:00'}:00`,
+        appointment_date: `${dose.date} ${timeString}`,
         status: dose.status === 'completed' ? 'completed' : 'booked',
         notes: dose.notes || null
       })

@@ -332,7 +332,8 @@ const todayAppointments = computed(() =>
         time: d.time || '-',
         vaccine: d.name,
         status: statusOverrides.value[d.id] || d.effectiveStatus || d.status,
-        confirmedByParent: d.confirmedByParent
+        confirmedByParent: d.confirmedByParent,
+        date: d.date
       }
     })
 )
@@ -355,10 +356,14 @@ async function updateStatus(appointment, newStatus) {
     if (newStatus === 'completed') {
       await childrenStore.confirmAttendance(appointment.childId, appointment.doseId);
     } else {
+      let safeTime = appointment.time;
+      if (!safeTime || safeTime === '-') safeTime = '09:00';
+      else if (safeTime.length === 5) safeTime = safeTime + ':00'; // Add seconds if missing
+
       await childrenStore.updateDose(appointment.childId, appointment.doseId, {
         status: newStatus === 'overdue' ? 'booked' : 'booked',
         date: appointment.date || todayStr,
-        time: appointment.time
+        time: safeTime
       });
     }
 
