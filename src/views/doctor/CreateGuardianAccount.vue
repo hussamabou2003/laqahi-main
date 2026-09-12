@@ -171,8 +171,7 @@ onMounted(async () => {
   guardian.phone = existingChild.guardianPhone || ''
   if (existingChild.parent) {
     guardian.email = existingChild.parent.email || ''
-    location.city = existingChild.parent.city || ''
-    location.district = existingChild.parent.district || ''
+    location.city = existingChild.parent.province || ''
   }
 
   Object.assign(child, {
@@ -228,7 +227,8 @@ async function handleSubmit() {
           email: guardian.email,
           password: guardian.password,
           nationalId: guardian.nationalId,
-          phone: guardian.phone
+          phone: guardian.phone,
+          province: location.city
         })
       }
 
@@ -249,7 +249,8 @@ async function handleSubmit() {
         email: guardian.email,
         password: guardian.password || 'Parent123',
         nationalId: guardian.nationalId,
-        phone: guardian.phone
+        phone: guardian.phone,
+        province: location.city
       })
 
       const parentId = parentRes?.id || parentRes?.parent?.id
