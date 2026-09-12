@@ -5,8 +5,21 @@
         <h1>لوحة التحكم</h1>
         <p class="welcome-text">مرحبًا {{ authStore.currentUser?.fullName }}، إليك ملخص نشاطك اليوم</p>
       </div>
-       <div class="header-actions">
-        <button type="button" class="icon-btn" aria-label="بحث"><i class="ti ti-search"></i></button>
+      <div class="header-actions">
+        <div class="search-wrapper" :class="{ 'is-active': isSearchActive }">
+          <input 
+            v-show="isSearchActive" 
+            ref="searchInput"
+            type="text" 
+            class="search-input" 
+            placeholder="ابحث عن طفل أو موعد..." 
+            @blur="isSearchActive = false"
+            @keydown.enter="isSearchActive = false; $router.push('/doctor/children')"
+          />
+          <button type="button" class="icon-btn" aria-label="بحث" @click="toggleSearch">
+            <i class="ti ti-search"></i>
+          </button>
+        </div>
         
         <!-- غلاف الجرس مع النقطة الحمراء -->
         <router-link to="/doctor/notifications" class="icon-btn notif-bell-wrapper" aria-label="الإشعارات">
@@ -196,6 +209,18 @@ const guardiansStore = useGuardiansStore()
 const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+const isSearchActive = ref(false)
+const searchInput = ref(null)
+
+function toggleSearch() {
+  isSearchActive.value = !isSearchActive.value
+  if (isSearchActive.value) {
+    nextTick(() => {
+      searchInput.value?.focus()
+    })
+  }
+}
+
 const stats = computed(() => {
   const allDoses = childrenStore.getAllDosesFlat
   return {
@@ -379,6 +404,12 @@ watch(() => uiStore.highlightAppointments, (val) => {
 
 .header-actions { display: flex; gap: 12px; }
 .icon-btn { background: #fff; border: 1px solid #e2e8f0; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+.search-wrapper { display: flex; align-items: center; background: #fff; border: 1px solid transparent; border-radius: 20px; transition: all 0.3s ease; height: 40px; }
+.search-wrapper.is-active { border-color: #e2e8f0; }
+.search-wrapper .icon-btn { border: none; background: transparent; }
+.search-input { border: none; background: transparent; padding: 0 12px; width: 180px; font-family: inherit; font-size: 13px; color: var(--color-text); outline: none; }
+.search-input::placeholder { color: #94a3b8; }
 
 .custom-select-wrapper { position: relative; display: inline-block; }
 .status-select {

@@ -239,6 +239,17 @@ const registeredAccounts = computed(() => {
 })
 
 const showNotifications = ref(false)
+const isSearchActive = ref(false)
+const searchInput = ref(null)
+
+function toggleSearch() {
+  isSearchActive.value = !isSearchActive.value
+  if (isSearchActive.value) {
+    nextTick(() => {
+      searchInput.value?.focus()
+    })
+  }
+}
 </script>
 
 <template>
@@ -262,12 +273,22 @@ const showNotifications = ref(false)
       </div>
 
       <div class="topbar__actions">
-        <button class="icon-btn" aria-label="بحث">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
-            <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <div class="search-wrapper" :class="{ 'is-active': isSearchActive }">
+          <input 
+            v-show="isSearchActive" 
+            ref="searchInput"
+            type="text" 
+            class="search-input" 
+            placeholder="ابحث هنا..." 
+            @blur="isSearchActive = false"
+          />
+          <button class="icon-btn" aria-label="بحث" @click="toggleSearch">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+              <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
         <div class="notif-wrapper">
           <button class="icon-btn" aria-label="الإشعارات" @click="showNotifications = !showNotifications">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -648,6 +669,32 @@ const showNotifications = ref(false)
   gap: 16px;
   margin-bottom: 26px;
 }
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.search-wrapper.is-active {
+  border-color: var(--color-border);
+}
+.search-input {
+  border: none;
+  background: transparent;
+  padding: 0 12px;
+  width: 200px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+}
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
 
 .tabs {
   display: flex;
