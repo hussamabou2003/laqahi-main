@@ -233,6 +233,8 @@ const registeredAccounts = computed(() => {
   const totals = serverData.value?.totals || {}
   return (totals.admins || 0) + (totals.doctors || 0) + (totals.parents || 0)
 })
+
+const showNotifications = ref(false)
 </script>
 
 <template>
@@ -262,12 +264,29 @@ const registeredAccounts = computed(() => {
             <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </button>
-        <button class="icon-btn" aria-label="الإشعارات">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-            <path d="M10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <div class="notif-wrapper">
+          <button class="icon-btn" aria-label="الإشعارات" @click="showNotifications = !showNotifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+          
+          <div v-if="showNotifications" class="notif-dropdown">
+            <div class="notif-dropdown__header">
+              <h3>الإشعارات</h3>
+            </div>
+            <div class="notif-dropdown__body">
+              <div class="notif-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/>
+                  <path d="M10 20a2 2 0 0 0 4 0"/>
+                </svg>
+                <p>لا توجد إشعارات جديدة حالياً</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <button class="btn btn-outline btn-xs" @click="handleLogout">
           تسجيل الخروج
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -567,6 +586,56 @@ const registeredAccounts = computed(() => {
 </template>
 
 <style scoped>
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  width: 320px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.notif-dropdown__header {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-gray-50);
+}
+
+.notif-dropdown__header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--color-text-muted);
+  gap: 12px;
+}
+
+.notif-empty svg {
+  opacity: 0.5;
+}
+
+.notif-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .topbar {
   display: flex;
   align-items: center;

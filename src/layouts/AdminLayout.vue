@@ -143,14 +143,6 @@ async function handleLogout() {
       </div>
     </footer>
 
-    <!-- زر الدعم العائم -->
-    <button class="support-fab" aria-label="الدعم الفني">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M4 13a8 8 0 1 1 16 0v4a2 2 0 0 1-2 2h-1v-7h3" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M4 13v3a1 1 0 0 0 1 1h1v-7H5a1 1 0 0 0-1 1Z" fill="#fff"/>
-        <path d="M16 19v.5a2.5 2.5 0 0 1-2.5 2.5H12" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
-      </svg>
-    </button>
     <!-- 2. وضع مكون الإشعارات هنا لكي يظهر أعلى يسار الشاشة دائماً -->
     <ToastContainer />
   </div>
