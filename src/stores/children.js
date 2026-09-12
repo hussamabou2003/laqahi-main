@@ -302,9 +302,10 @@ export const useChildrenStore = defineStore('children', {
       }
     },
 
-    async confirmAttendance(childId, doseId, notes = '') {
+    async confirmAttendance(childId, doseId, data = {}) {
       try {
-        const res = await completeAppointmentApi(doseId, { notes })
+        const payload = typeof data === 'string' ? { notes: data } : data;
+        const res = await completeAppointmentApi(doseId, payload)
         await this.fetchDoctorChildren()
         return res
       } catch (err) {
