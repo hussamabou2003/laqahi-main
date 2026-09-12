@@ -18,7 +18,7 @@
       </div>
       <div class="doctor-meta">
         <p class="doctor-name">{{ authStore.currentUser?.fullName || 'د. ليث حسان' }}</p>
-        <span class="doctor-role">{{ authStore.currentUser?.role || 'المسؤول الطبي' }}</span>
+        <span class="doctor-role">{{ authStore.currentUser?.role || 'طبيب' }}</span>
       </div>
     </div>
 
