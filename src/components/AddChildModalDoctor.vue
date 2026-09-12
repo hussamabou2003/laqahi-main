@@ -21,7 +21,7 @@
             required 
           />
           <span v-if="guardianPreview" class="guardian-found">
-            <i class="ti ti-circle-check"></i> ولي الأمر: {{ guardianPreview.fullName }}
+            <i class="ti ti-circle-check"></i> ولي الأمر: {{ guardianPreview.fullName || guardianPreview.name }}
           </span>
         </label>
 
@@ -29,7 +29,7 @@
           <span>اسم ولي الأمر</span>
           <input 
             type="text" 
-            :value="guardianPreview ? guardianPreview.fullName : ''"
+            :value="guardianPreview ? (guardianPreview.fullName || guardianPreview.name) : ''"
             placeholder="يظهر تلقائياً عند إدخال رقم وطني صحيح"
             readonly
             disabled
@@ -95,13 +95,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
-import { useGuardiansStore } from '../stores/guardians'
+import { reactive, ref, watch } from 'vue'
+import { getGuardianByNationalIdApi } from '../utils/api'
 import { useChildrenStore } from '../stores/children'
 
 const emit = defineEmits(['close', 'saved'])
 
-const guardiansStore = useGuardiansStore()
 const childrenStore = useChildrenStore()
 
 const form = reactive({ 
@@ -114,12 +113,28 @@ const form = reactive({
   bloodType: ''
 })
 const error = ref('')
+const guardianPreview = ref(null)
 
 const NATIONAL_ID_REGEX = /^\d{11}$/
 
-const guardianPreview = computed(() => {
-  if (!NATIONAL_ID_REGEX.test(form.guardianNationalId)) return null
-  return guardiansStore.findByNationalId(form.guardianNationalId) || null
+watch(() => form.guardianNationalId, async (newVal) => {
+  if (NATIONAL_ID_REGEX.test(newVal)) {
+    try {
+      error.value = ''
+      const res = await getGuardianByNationalIdApi(newVal)
+      if (res) {
+        guardianPreview.value = res
+      } else {
+        guardianPreview.value = null
+        error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
+      }
+    } catch (e) {
+      guardianPreview.value = null
+      error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
+    }
+  } else {
+    guardianPreview.value = null
+  }
 })
 
 async function handleSubmit() {
@@ -130,11 +145,14 @@ async function handleSubmit() {
     return
   }
 
-  const guardian = guardiansStore.findByNationalId(form.guardianNationalId)
-  if (!guardian) {
+  if (!guardianPreview.value) {
     error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
     return
   }
+
+  const guardian = guardianPreview.value
+
+
 
   try {
     await childrenStore.addChild({
