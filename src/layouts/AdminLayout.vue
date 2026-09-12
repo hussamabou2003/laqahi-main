@@ -294,40 +294,7 @@ async function handleLogout() {
   filter: brightness(0.96);
 }
 
-/* ---------- الفوتر ---------- */
-.admin__footer {
-  border-top: 1px solid var(--color-border);
-  background: var(--color-white);
-  padding: 18px 36px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-}
 
-.admin__footer-links {
-  display: flex;
-  gap: 18px;
-}
-
-/* ---------- زر الدعم العائم ---------- */
-.support-fab {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--color-green-800);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-md);
-  z-index: 40;
-}
 
 @media (max-width: 1100px) {
   .admin__body {

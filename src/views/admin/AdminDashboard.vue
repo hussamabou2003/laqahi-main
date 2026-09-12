@@ -170,7 +170,43 @@ async function triggerBackup() {
   } catch (err) {
     toast.error('خطأ', 'فشلت عملية النسخ الاحتياطي')
   }
+}
 const showNotifications = ref(false)
+
+const notificationsList = computed(() => {
+  const notifs = []
+  
+  // إشعارات المخزون المنخفض
+  inventoryStore.lowStockItems.forEach(item => {
+    notifs.push({
+      id: `inv_${item.id}`,
+      type: 'inventory',
+      icon: 'alert-triangle',
+      color: 'var(--color-danger-600)',
+      title: 'تنبيه مخزون منخفض',
+      message: `انخفض مخزون ${item.vaccine?.name || ''} في ${item.center?.name || ''} إلى ${item.quantity}.`,
+      time: 'الآن'
+    })
+  })
+
+  // إشعارات تسجيل دخول الأطباء
+  const logins = audit.entries.filter(e => e.type === 'login' && e.details.includes('طبيب'))
+  logins.forEach((login, idx) => {
+    notifs.push({
+      id: `login_${idx}`,
+      type: 'login',
+      icon: 'login',
+      color: 'var(--color-info-600)',
+      title: 'تسجيل دخول طبيب',
+      message: `${login.user_name || 'طبيب'} - ${login.details}`,
+      time: login.time
+    })
+  })
+
+  return notifs
+})
+
+const unreadCount = computed(() => notificationsList.value.length)
 </script>
 
 <template>
@@ -195,20 +231,38 @@ const showNotifications = ref(false)
               <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               <path d="M10 20a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
-            <span class="bell__dot"></span>
+            <span v-if="unreadCount > 0" class="bell__dot"></span>
           </button>
           
           <div v-if="showNotifications" class="notif-dropdown">
             <div class="notif-dropdown__header">
-              <h3>الإشعارات</h3>
+              <h3>الإشعارات ({{ unreadCount }})</h3>
             </div>
             <div class="notif-dropdown__body">
-              <div class="notif-empty">
+              <div v-if="notificationsList.length === 0" class="notif-empty">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/>
                   <path d="M10 20a2 2 0 0 0 4 0"/>
                 </svg>
                 <p>لا توجد إشعارات جديدة حالياً</p>
+              </div>
+              <div v-else class="notif-list">
+                <div v-for="notif in notificationsList" :key="notif.id" class="notif-item">
+                  <div class="notif-item__icon" :style="{ color: notif.color }">
+                    <svg v-if="notif.icon === 'alert-triangle'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                  </div>
+                  <div class="notif-item__content">
+                    <h4>{{ notif.title }}</h4>
+                    <p>{{ notif.message }}</p>
+                    <small>{{ notif.time }}</small>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -496,6 +550,51 @@ const showNotifications = ref(false)
 .notif-empty p {
   margin: 0;
   font-size: 14px;
+}
+
+.notif-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.15s ease;
+}
+
+.notif-item:hover {
+  background: var(--color-gray-50);
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-item__content h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-strong);
+}
+
+.notif-item__content p {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.notif-item__content small {
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 
 .topbar {
