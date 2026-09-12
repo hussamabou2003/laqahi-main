@@ -80,22 +80,51 @@
         </div>
       </section>
 
+      <section class="settings-card">
+        <h2 class="section-title">تغيير المركز الصحي</h2>
+        <div class="setting-item">
+          <p class="setting-desc">يمكنك نقل ملفات أطفالك ومواعيدهم إلى مركز صحي آخر في محافظة أخرى. ستظل اللقاحات المعطاة محفوظة في سجلاتهم.</p>
+          
+          <div class="input-group-col">
+            <select v-model="selectedProvince" class="form-input" @change="selectedCenter = ''">
+              <option value="" disabled>اختر المحافظة...</option>
+              <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
+            </select>
+
+            <select v-model="selectedCenter" class="form-input" :disabled="!selectedProvince">
+              <option value="" disabled>اختر المركز الصحي...</option>
+              <option v-for="center in filteredCenters" :key="center.id" :value="center.id">{{ center.name }}</option>
+            </select>
+
+            <button class="btn-primary" @click="changeCenter" :disabled="centerLoading || !selectedCenter">
+              {{ centerLoading ? 'جاري النقل...' : 'نقل الملفات' }}
+            </button>
+          </div>
+
+          <div v-if="centerSuccessMsg" class="alert-success mt-4">
+            <i class="ti ti-check"></i> {{ centerSuccessMsg }}
+          </div>
+          <div v-if="centerErrorMsg" class="alert-error mt-4">
+            <i class="ti ti-alert-circle"></i> {{ centerErrorMsg }}
+          </div>
+        </div>
+      </section>
+
     </div>
   </DashboardLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 import { useAuthStore } from '../stores/auth'
-import { sendPasswordResetCodeApi, verifyPasswordResetCodeApi, changePasswordApi } from '../utils/api'
+import { sendPasswordResetCodeApi, verifyPasswordResetCodeApi, changePasswordApi, getSharedCentersApi, changeCenterApi } from '../utils/api'
 
 const authStore = useAuthStore()
 
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useRoute } from 'vue-router'
-import { onMounted } from 'vue'
 
 const { locale } = useI18n()
 const settingsStore = useSettingsStore()
@@ -107,22 +136,63 @@ function changeLanguage(lang) {
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
 }
 
-onMounted(() => {
-  if (route.query.reset_token) {
-    resetToken.value = route.query.reset_token
-    step.value = 3
-  }
-})
-
+// Password Reset state
 const step = ref(1) // 1: send, 2: verify, 3: change
-const loading = ref(false)
 const verificationCode = ref('')
+const resetToken = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
-const resetToken = ref('')
 
 const successMsg = ref('')
 const errorMsg = ref('')
+const loading = ref(false)
+
+// Change Center state
+const allCenters = ref([])
+const selectedProvince = ref('')
+const selectedCenter = ref('')
+const centerLoading = ref(false)
+const centerSuccessMsg = ref('')
+const centerErrorMsg = ref('')
+
+const provinces = computed(() => {
+  const provs = allCenters.value.map(c => c.province).filter(Boolean)
+  return [...new Set(provs)]
+})
+
+const filteredCenters = computed(() => {
+  return allCenters.value.filter(c => c.province === selectedProvince.value)
+})
+
+onMounted(async () => {
+  if (route.query.section === 'password') {
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    }, 100)
+  }
+  
+  try {
+    allCenters.value = (await getSharedCentersApi()) || []
+  } catch(e) {
+    console.error('Failed to load centers')
+  }
+})
+
+async function changeCenter() {
+  if (!selectedCenter.value) return
+  centerErrorMsg.value = ''
+  centerSuccessMsg.value = ''
+  centerLoading.value = true
+
+  try {
+    await changeCenterApi({ center_id: selectedCenter.value })
+    centerSuccessMsg.value = 'تم تغيير المركز بنجاح ونقل جميع الملفات والمواعيد القادمة.'
+  } catch (err) {
+    centerErrorMsg.value = err.message || 'حدث خطأ أثناء تغيير المركز.'
+  } finally {
+    centerLoading.value = false
+  }
+}
 
 function clearMsgs() {
   successMsg.value = ''

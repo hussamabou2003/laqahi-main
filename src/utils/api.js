@@ -268,3 +268,4 @@ export async function changePasswordApi(data) {
   return apiFetch('/parent/settings/password/change', { method: 'POST', body: data })
 }
 
+export async function changeCenterApi(data) { return apiFetch('/parent/settings/change-center', { method: 'POST', body: data }) }
