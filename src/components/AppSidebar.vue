@@ -37,7 +37,7 @@
       <button type="button" class="nav-item nav-btn" @click="goToSection('centers')">
         <i class="ti ti-map-pin"></i><span>{{ $t("sidebar.healthCenters") }}</span>
       </button>
-      <a href="#" class="nav-item"><i class="ti ti-bell"></i><span>{{ $t("sidebar.alerts") }}</span></a>
+      <router-link to="/notifications" class="nav-item"><i class="ti ti-bell"></i><span>{{ $t("sidebar.alerts") }}</span></router-link>
       <router-link to="/settings" class="nav-item"><i class="ti ti-settings"></i><span>{{ $t("sidebar.settings") }}</span></router-link>
     </nav>
 
