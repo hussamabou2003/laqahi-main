@@ -130,7 +130,11 @@ watch(() => form.guardianNationalId, async (newVal) => {
       }
     } catch (e) {
       guardianPreview.value = null
-      error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
+      if (e.status === 404) {
+        error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
+      } else {
+        error.value = e.message || 'حدث خطأ أثناء البحث عن ولي الأمر'
+      }
     }
   } else {
     guardianPreview.value = null
