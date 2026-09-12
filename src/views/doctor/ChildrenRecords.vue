@@ -31,7 +31,7 @@
       <div class="search-row">
         <div class="search-box">
           <i class="ti ti-search"></i>
-          <input v-model="searchQuery" type="text" placeholder="البحث بالاسم، المعرف الوطني، أو هاتف ولي الأمر..." />
+          <input v-model="searchQuery" type="text" placeholder="البحث بالاسم، المعرف الوطني، هاتف الولي، أو رمز الطفل المميز (QR)..." />
         </div>
         <button type="button" class="btn-qr" @click="showQrScanner = true" title="مسح رمز QR">
           <i class="ti ti-qrcode"></i>
@@ -206,6 +206,7 @@ const records = computed(() =>
       guardianName: child.guardianName || child.parent?.name || guardian?.fullName || '-',
       guardianPhone: child.guardianPhone || child.parent?.phone || guardian?.phone || '',
       guardianNationalId: child.guardianNationalId || child.parent?.national_id || '',
+      qrCode: child.qrCode || child.qr_code || '',
       status
     }
   })
@@ -219,7 +220,8 @@ const filteredRecords = computed(() => {
       r.childName.includes(q) ||
       (r.guardianPhone || '').includes(q) ||
       (r.guardianNationalId || '').includes(q) ||
-      (r.guardianName || '').includes(q)
+      (r.guardianName || '').includes(q) ||
+      (r.qrCode || '').includes(q)
   )
 })
 
