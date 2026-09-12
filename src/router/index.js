@@ -51,7 +51,7 @@ const router = createRouter({
     { path: '/admin/settings', name: 'admin-settings', component: SettingsView, meta: { role: 'admin' } },
     { path: '/admin/audit', name: 'admin-audit', component: AuditLogView, meta: { role: 'admin' } },
     { path: '/admin/reports', name: 'admin-reports', component: AdminReportsView, meta: { role: 'admin' } },
-    { path: '/admin/inventory', name: 'admin-inventory', component: InventoryView, meta: { role: 'admin' } }
+    { path: '/admin/inventory', name: 'admin-inventory', component: InventoryView, meta: { role: 'admin' } },
 
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue') }
   ]
