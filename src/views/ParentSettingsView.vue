@@ -92,7 +92,9 @@
             </select>
 
             <select v-model="selectedCenter" class="form-input" :disabled="!selectedProvince">
-              <option value="" disabled>اختر المركز الصحي...</option>
+              <option value="" disabled>
+                {{ selectedProvince && filteredCenters.length === 0 ? 'لا يوجد مراكز مسجلة في هذه المحافظة حالياً' : 'اختر المركز الصحي...' }}
+              </option>
               <option v-for="center in filteredCenters" :key="center.id" :value="center.id">{{ center.name }}</option>
             </select>
 
@@ -155,10 +157,10 @@ const centerLoading = ref(false)
 const centerSuccessMsg = ref('')
 const centerErrorMsg = ref('')
 
-const provinces = computed(() => {
-  const provs = allCenters.value.map(c => c.province).filter(Boolean)
-  return [...new Set(provs)]
-})
+const provinces = [
+  'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس',
+  'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا', 'السويداء', 'القنيطرة'
+]
 
 const filteredCenters = computed(() => {
   return allCenters.value.filter(c => c.province === selectedProvince.value)
