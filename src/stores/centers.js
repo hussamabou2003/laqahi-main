@@ -11,9 +11,9 @@ export const useCentersStore = defineStore('centers', {
   getters: {
     // إحصائيات لوحة الإدارة والطبيب
     total: (state) => state.list.length,
-    activeCount: (state) => state.list.length,
-    activeCentersCount: (state) => state.list.length, // لتوافق لوحة الطبيب
-    inactiveCount: () => 0,
+    activeCount: (state) => state.list.filter(c => c.status === 'نشط').length,
+    activeCentersCount: (state) => state.list.filter(c => c.status === 'نشط').length,
+    inactiveCount: (state) => state.list.filter(c => c.status !== 'نشط').length,
     
     // استخراج عدد المناطق الفريدة
     regionsCount: (state) => {
@@ -35,7 +35,7 @@ export const useCentersStore = defineStore('centers', {
           ...c,
           location: c.address || c.location || c.name,
           capacityPerDay: c.capacityPerDay || 150,
-          status: 'نشط'
+          status: c.status || 'نشط'
         }))
         return this.list
       } catch (err) {

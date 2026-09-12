@@ -53,6 +53,7 @@ function normalizeChild(c) {
     gender: c.gender,
     height: c.height ?? null,
     weight: c.weight ?? null,
+    bloodType: c.blood_type || c.bloodType,
     guardianName: c.parent?.name || c.guardianName,
     guardianNationalId: c.parent?.national_id || c.guardianNationalId,
     guardianPhone: c.parent?.phone || c.guardianPhone,

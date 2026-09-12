@@ -104,7 +104,8 @@ async function savePanel() {
       name: centerForm.name,
       province: centerForm.province,
       address: centerForm.location,
-      phone: centerForm.phone
+      phone: centerForm.phone,
+      status: centerForm.status
     }
 
     if (panelMode.value === 'add') {
