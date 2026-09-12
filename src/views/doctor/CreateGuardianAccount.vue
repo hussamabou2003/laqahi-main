@@ -116,7 +116,7 @@
         <p v-if="formError" class="form-error">{{ formError }}</p>
 
         <div class="form-actions">
-         <button type="button" class="btn btn-outline" @click="closeModal">إلغاء</button>
+         <button type="button" class="btn btn-outline" @click="cancelEdit">إلغاء</button>
           <button type="submit" class="btn btn-primary">{{ isEditMode ? 'حفظ التعديلات' : 'حفظ الحساب' }}</button>
         </div>
       </form>
@@ -152,9 +152,13 @@ const NATIONAL_ID_REGEX = /^\d{11}$/
 const SYRIAN_PHONE_REGEX = /^09\d{8}$/
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/
 
-onMounted(() => {
+onMounted(async () => {
   const childId = route.params.childId
   if (!childId) return
+
+  if (childrenStore.children.length === 0) {
+    await childrenStore.fetchDoctorChildren()
+  }
 
   const existingChild = childrenStore.getChildById(childId)
   if (!existingChild) return
@@ -162,14 +166,13 @@ onMounted(() => {
   isEditMode.value = true
   editingChildId.value = childId
 
-  const existingGuardian = guardiansStore.guardians.find(
-    (g) => g.nationalId === existingChild.guardianNationalId
-  )
-
-  if (existingGuardian) {
-    Object.assign(guardian, existingGuardian)
-    location.city = existingGuardian.city || ''
-    location.district = existingGuardian.district || ''
+  guardian.fullName = existingChild.guardianName || ''
+  guardian.nationalId = existingChild.guardianNationalId || ''
+  guardian.phone = existingChild.guardianPhone || ''
+  if (existingChild.parent) {
+    guardian.email = existingChild.parent.email || ''
+    location.city = existingChild.parent.city || ''
+    location.district = existingChild.parent.district || ''
   }
 
   Object.assign(child, {
@@ -181,6 +184,10 @@ onMounted(() => {
     bloodType: existingChild.bloodType
   })
 })
+
+function cancelEdit() {
+  router.push('/doctor/children')
+}
 
 function handleFocusIn(e) {
   const section = e.target.closest('[data-step]')
@@ -211,26 +218,49 @@ async function handleSubmit() {
   }
 
   try {
-    // 1. إنشاء حساب ولي الأمر عبر POST /doctor/parents
-    const parentRes = await guardiansStore.addGuardian({
-      fullName: guardian.fullName,
-      email: guardian.email,
-      password: guardian.password || 'Parent123',
-      nationalId: guardian.nationalId,
-      phone: guardian.phone
-    })
+    if (isEditMode.value) {
+      const existingChild = childrenStore.getChildById(editingChildId.value)
+      
+      // Update parent if parent_id exists
+      if (existingChild && existingChild.parent_id) {
+        await guardiansStore.updateGuardian(existingChild.parent_id, {
+          fullName: guardian.fullName,
+          email: guardian.email,
+          password: guardian.password,
+          nationalId: guardian.nationalId,
+          phone: guardian.phone
+        })
+      }
 
-    const parentId = parentRes?.id || parentRes?.parent?.id
+      // Update child
+      await childrenStore.updateChild(editingChildId.value, {
+        name: child.fullName,
+        birth_date: child.birthDate,
+        gender: child.gender
+      }, true) // true for isDoctor
+      
+      router.push('/doctor/children')
+    } else {
+      // Create mode
+      const parentRes = await guardiansStore.addGuardian({
+        fullName: guardian.fullName,
+        email: guardian.email,
+        password: guardian.password || 'Parent123',
+        nationalId: guardian.nationalId,
+        phone: guardian.phone
+      })
 
-    // 2. إضافة الطفل بالـ parent_id الناتج عبر POST /doctor/children
-    await childrenStore.addChild({
-      name: child.fullName,
-      birth_date: child.birthDate,
-      gender: child.gender,
-      parent_id: parentId
-    }, true)
+      const parentId = parentRes?.id || parentRes?.parent?.id
 
-    router.push('/doctor/children')
+      await childrenStore.addChild({
+        name: child.fullName,
+        birth_date: child.birthDate,
+        gender: child.gender,
+        parent_id: parentId
+      }, true)
+
+      router.push('/doctor/children')
+    }
   } catch (err) {
     formError.value = err.message || 'حدث خطأ أثناء حفظ التغييرات'
   }

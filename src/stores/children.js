@@ -16,7 +16,8 @@ import {
   createDoctorAppointmentApi,
   updateDoctorAppointmentApi,
   confirmAppointmentApi,
-  deleteDoctorChildApi
+  deleteDoctorChildApi,
+  updateDoctorChildApi
 } from '../utils/api'
 
 const todayStr = () => new Date().toISOString().slice(0, 10)
@@ -251,6 +252,23 @@ export const useChildrenStore = defineStore('children', {
           return res
         } else {
           const res = await addParentChildApi(childData)
+          await this.fetchParentChildren()
+          return res
+        }
+      } catch (err) {
+        this.error = err.message
+        throw err
+      }
+    },
+
+    async updateChild(childId, childData, isDoctor = false) {
+      try {
+        if (isDoctor) {
+          const res = await updateDoctorChildApi(childId, childData)
+          await this.fetchDoctorChildren()
+          return res
+        } else {
+          const res = await updateParentChildApi(childId, childData)
           await this.fetchParentChildren()
           return res
         }

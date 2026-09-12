@@ -177,6 +177,8 @@ export async function scanChildQrApi(qrCode) { return apiData('/doctor/children/
 export async function getDoctorChildQrApi(childId) { return apiData('/doctor/children/' + childId + '/qr') }
 
 export async function createParentAccountApi(data) { return apiFetch('/doctor/parents', { method: 'POST', body: data }) }
+export async function updateParentAccountApi(parentId, data) { return apiFetch('/doctor/parents/' + parentId, { method: 'PUT', body: data }) }
+export async function updateDoctorChildApi(childId, data) { return apiFetch('/doctor/children/' + childId, { method: 'PUT', body: data }) }
 
 // ===================== المواعيد (Appointments) =====================
 
