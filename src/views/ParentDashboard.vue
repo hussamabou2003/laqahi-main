@@ -298,7 +298,11 @@ const child = computed(() => {
     const found = myChildren.value.find((c) => String(c.id) === String(selectedChildId.value))
     if (found) return found
   }
-  return null // Do not default to first child, wait for user selection
+  // Auto-select if there is exactly one child
+  if (myChildren.value.length === 1) {
+    return myChildren.value[0]
+  }
+  return null // Otherwise wait for user selection
 })
 
 function selectChildFromRoute() {
