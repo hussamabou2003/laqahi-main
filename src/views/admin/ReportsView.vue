@@ -67,7 +67,11 @@ const chartCanvas = ref(null)
 let chartInstance = null
 
 function currentSeries() {
-  return chartRange.value === 'يومي' ? childrenStore.dailySeries(7) : childrenStore.monthlySeries(6)
+  if (chartRange.value === 'يومي') {
+    return serverData.value.daily_series || { labels: [], values: [] }
+  } else {
+    return serverData.value.monthly_series || { labels: [], values: [] }
+  }
 }
 
 function renderChart() {
