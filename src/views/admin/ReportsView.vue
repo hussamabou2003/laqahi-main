@@ -126,7 +126,7 @@ const activityColors = { login: '#2f7fe0', doctor: '#22b06a', center: '#2bc37a',
 const quickSettings = [
   { label: 'إعدادات عامة', action: () => router.push('/admin/settings?tab=general') },
   { label: 'الأمان والخصوصية (وضع الصيانة)', action: () => router.push('/admin/settings?tab=security') },
-  { label: 'النسخ الاحتياطي', action: () => router.push('/admin/backup') }
+  { label: 'النسخ الاحتياطي', action: () => router.push('/admin/settings?tab=backup') }
 ]
 
 // مراكز اللقاحات: تصنيف ذكي

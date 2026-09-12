@@ -21,7 +21,7 @@ const navItems = computed(() => {
     { to: '/admin/centers', label: 'مراكز اللقاحات', match: 'admin-centers', icon: 'pin' },
     { to: '/admin/inventory', label: 'مخزون اللقاحات', match: 'admin-inventory', icon: 'box' },
     { to: '/admin/reports', label: 'التقارير', match: 'admin-reports', icon: 'chart' },
-    { to: '/admin/backup', label: 'النسخ الاحتياطي', match: 'admin-backup', icon: 'backup' }
+    { to: '/admin/settings', label: 'الإعدادات', match: 'admin-settings', icon: 'settings' }
   ]
   if (auth.user && ROUTE_ROLES.audit.includes(auth.user.role)) {
     items.push({ to: '/admin/audit', label: 'سجل النشاطات', match: 'admin-audit', icon: 'audit' })
@@ -69,7 +69,7 @@ async function handleLogout() {
         <nav class="sidebar__nav">
           <router-link
             v-for="item in navItems"
-            :key="item.to"
+            :key="item.match"
             :to="item.to"
             class="sidebar__link"
             :class="{ 'sidebar__link--active': route.name === item.match }"
@@ -91,12 +91,20 @@ async function handleLogout() {
                 <path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22Z" stroke="currentColor" stroke-width="1.7"/>
                 <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/>
               </svg>
+              <svg v-else-if="item.icon === 'box'" width="19" height="19" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              </svg>
+              <svg v-else-if="item.icon === 'chart'" width="19" height="19" viewBox="0 0 24 24" fill="none">
+                <path d="M4 20V10M11 20V4M18 20v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
               <svg v-else-if="item.icon === 'audit'" width="19" height="19" viewBox="0 0 24 24" fill="none">
                 <path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
                 <path d="M9 17h6M9 13h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
               </svg>
-              <svg v-else-if="item.icon === 'backup'" width="19" height="19" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M12 16V4M8 8l4-4 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg v-else-if="item.icon === 'settings'" width="19" height="19" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
               </svg>
               <svg v-else width="19" height="19" viewBox="0 0 24 24" fill="none">
                 <path d="M4 20V10M11 20V4M18 20v-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -104,19 +112,6 @@ async function handleLogout() {
             </span>
             {{ item.label }}
           </router-link>
-
-          <template v-if="showSettingsLink">
-            <div class="sidebar__divider"></div>
-            <router-link to="/admin/settings" class="sidebar__link" :class="{ 'sidebar__link--active': route.name === 'settings' }">
-            <span class="sidebar__link-icon">
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/>
-                  <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V19.5a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H4.5a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.55V4.5a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.55 1h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              إعدادات النظام
-            </router-link>
-          </template>
         </nav>
 
         <button class="sidebar__logout" @click="handleLogout">

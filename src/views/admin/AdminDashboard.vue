@@ -461,40 +461,23 @@ const unreadCount = computed(() => notificationsList.value.length)
           </ul>
         </div>
 
-        <!-- النسخ الاحتياطي السريع تم نقله لصفحة مخصصة -->
+        <!-- النسخ الاحتياطي وإعدادات النظام نقلت للقائمة الجانبية -->
         <div class="oversight__col">
-          <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 22px;">
-            <button @click="exportPdf" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;">
-              تصدير PDF
+          <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 22px; flex-direction: column;">
+            <button @click="exportPdf" class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px; padding: 12px;">
+              تصدير إحصائيات النظام كـ PDF
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-3 3m0 0-3-3m3 3V4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px;" @click="exportExcel">
-              تصدير Excel
+            <button class="btn btn-outline export-btn" style="flex: 1; justify-content: center; gap: 8px; padding: 12px;" @click="exportExcel">
+              تصدير الإحصائيات كـ Excel
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M10 12l4 4m0 -4l-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
-
-          <ul class="settings-list">
-            <li v-for="s in settingsLinks" :key="s.tab">
-              <router-link v-if="auth.can('settings.view')" :to="`/admin/settings?tab=${s.tab}`" class="settings-list__link">
-                <span>{{ s.label }}</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </router-link>
-              <template v-else>
-                <span>{{ s.label }}</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </template>
-            </li>
-          </ul>
         </div>
       </div>
     </section>
