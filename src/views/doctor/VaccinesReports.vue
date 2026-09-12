@@ -5,9 +5,6 @@
         <h1>تسجيل اللقاحات والتقارير</h1>
         <p class="subtitle">إدارة وتحليل سجلات التحصين للمركز الطبي</p>
       </div>
-      <button type="button" class="btn btn-primary" @click="showAddChildModal = true">
-        <i class="ti ti-plus"></i> إضافة طفل جديد
-      </button>
     </div>
 
     <div class="dashboard-layout">
@@ -239,11 +236,7 @@
       </div>
     </section>
 
-    <AddChildModalDoctor
-      v-if="showAddChildModal"
-      @close="showAddChildModal = false"
-      @saved="showAddChildModal = false"
-    />
+
   </DoctorLayout>
 </template>
 
@@ -256,10 +249,8 @@ import { useCentersStore } from '../../stores/centers'
 import { VACCINE_SCHEDULE, getPreciseAge } from '../../stores/vaccines'
 import { useVaccinesStore } from '../../stores/vaccines'
 import { useAuthStore } from '../../stores/auth'
-import AddChildModalDoctor from '../../components/AddChildModalDoctor.vue'
 import { useNotificationsStore } from '../../stores/notifications'
 const registerCardRef = ref(null) 
-const showAddChildModal = ref(false)
 const centersStore = useCentersStore()
 const childrenStore = useChildrenStore()
 const authStore = useAuthStore()

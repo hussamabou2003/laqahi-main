@@ -5,6 +5,9 @@
         <h1>سجلات الأطفال</h1>
         <p class="subtitle">إدارة سجلات الأطفال وحالات التحصين</p>
       </div>
+      <button type="button" class="btn btn-primary" @click="showAddChildModal = true">
+        <i class="ti ti-plus"></i> إضافة طفل جديد
+      </button>
     </div>
 
     <section class="stats-row">
@@ -140,6 +143,12 @@
       @close="showQrScanner = false"
       @scanned="handleQrScanned"
     />
+
+    <AddChildModalDoctor
+      v-if="showAddChildModal"
+      @close="showAddChildModal = false"
+      @saved="showAddChildModal = false"
+    />
   </DoctorLayout>
 </template>
 
@@ -150,6 +159,7 @@ import { useChildrenStore } from '../../stores/children'
 import { useGuardiansStore } from '../../stores/guardians'
 import ChildQrModal from '../../components/ChildQrModal.vue'
 import QrScannerModal from '../../components/QrScannerModal.vue'
+import AddChildModalDoctor from '../../components/AddChildModalDoctor.vue'
 import { scanChildQrApi } from '../../utils/api'
 
 const childrenStore = useChildrenStore()
@@ -160,6 +170,7 @@ const completingDoseId = ref(null)
 const vaccineError = ref('')
 const searchQuery = ref('')
 const showQrScanner = ref(false)
+const showAddChildModal = ref(false)
 
 async function handleQrScanned(qrCode) {
   showQrScanner.value = false

@@ -26,6 +26,16 @@
         </label>
 
         <label class="form-field">
+          <span>اسم ولي الأمر (مطلوب لإنشاء حساب جديد)</span>
+          <input 
+            v-model.trim="form.guardianName" 
+            type="text" 
+            :placeholder="guardianPreview ? guardianPreview.fullName : 'الاسم الكامل لولي الأمر'"
+            :disabled="!!guardianPreview"
+          />
+        </label>
+
+        <label class="form-field">
           <span>الاسم الكامل للطفل</span>
           <input v-model.trim="form.fullName" type="text" required />
         </label>
@@ -88,13 +98,17 @@ import { reactive, ref, computed } from 'vue'
 import { useGuardiansStore } from '../stores/guardians'
 import { useChildrenStore } from '../stores/children'
 
+import { useAuthStore } from '../stores/auth'
+
 const emit = defineEmits(['close', 'saved'])
 
 const guardiansStore = useGuardiansStore()
 const childrenStore = useChildrenStore()
+const authStore = useAuthStore()
 
 const form = reactive({ 
   guardianNationalId: '', 
+  guardianName: '',
   fullName: '', 
   birthDate: '', 
   gender: '',
@@ -111,7 +125,7 @@ const guardianPreview = computed(() => {
   return guardiansStore.findByNationalId(form.guardianNationalId) || null
 })
 
-function handleSubmit() {
+async function handleSubmit() {
   error.value = ''
 
   if (!NATIONAL_ID_REGEX.test(form.guardianNationalId)) {
@@ -119,23 +133,44 @@ function handleSubmit() {
     return
   }
 
-  const guardian = guardiansStore.findByNationalId(form.guardianNationalId)
+  let guardian = guardiansStore.findByNationalId(form.guardianNationalId)
+
   if (!guardian) {
-    error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
-    return
+    if (!form.guardianName) {
+      error.value = 'الرقم الوطني غير مسجل مسبقاً، يرجى إدخال اسم ولي الأمر لإنشاء حساب جديد'
+      return
+    }
+    try {
+      const parentRes = await guardiansStore.addGuardian({
+        fullName: form.guardianName,
+        email: `${form.guardianNationalId}@laqahi.local`,
+        password: 'Parent123',
+        nationalId: form.guardianNationalId,
+        phone: '',
+        province: authStore.currentUser?.center?.province || 'دمشق',
+        district: ''
+      })
+      guardian = { id: parentRes?.id || parentRes?.parent?.id }
+    } catch (e) {
+      error.value = 'حدث خطأ أثناء إنشاء حساب ولي الأمر تلقائياً'
+      return
+    }
   }
 
-  childrenStore.addChild({
-    guardianNationalId: form.guardianNationalId,
-    fullName: form.fullName,
-    birthDate: form.birthDate,
-    gender: form.gender,
-    height: form.height || null,
-    weight: form.weight || null,
-    bloodType: form.bloodType || null
-  })
-
-  emit('saved')
+  try {
+    await childrenStore.addChild({
+      parent_id: guardian.id,
+      name: form.fullName,
+      birth_date: form.birthDate,
+      gender: form.gender,
+      height: form.height || null,
+      weight: form.weight || null,
+      blood_type: form.bloodType || null
+    }, true)
+    emit('saved')
+  } catch (e) {
+    error.value = e.message || 'حدث خطأ أثناء إضافة الطفل'
+  }
 }
 </script>
 

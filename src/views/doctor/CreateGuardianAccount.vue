@@ -172,6 +172,7 @@ onMounted(async () => {
   if (existingChild.parent) {
     guardian.email = existingChild.parent.email || ''
     location.city = existingChild.parent.province || ''
+    location.district = existingChild.parent.district || ''
   }
 
   Object.assign(child, {
@@ -228,7 +229,8 @@ async function handleSubmit() {
           password: guardian.password,
           nationalId: guardian.nationalId,
           phone: guardian.phone,
-          province: location.city
+          province: location.city,
+          district: location.district
         })
       }
 
@@ -250,7 +252,8 @@ async function handleSubmit() {
         password: guardian.password || 'Parent123',
         nationalId: guardian.nationalId,
         phone: guardian.phone,
-        province: location.city
+        province: location.city,
+        district: location.district
       })
 
       const parentId = parentRes?.id || parentRes?.parent?.id
