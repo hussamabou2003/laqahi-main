@@ -337,12 +337,13 @@ const todayAppointments = computed(() =>
     })
 )
 
-function updateStatus(appointment, newStatus) {
+async function updateStatus(appointment, newStatus) {
+  const previousStatus = appointment.status
   statusOverrides.value = { ...statusOverrides.value, [appointment.doseId]: newStatus }
 
-  const child = childrenStore.children.find(c => c.id === appointment.childId);
+  const child = childrenStore.children.find(c => String(c.id) === String(appointment.childId));
   if (child && child.doses) {
-    const doseIndex = child.doses.findIndex(d => d.id === appointment.doseId);
+    const doseIndex = child.doses.findIndex(d => String(d.id) === String(appointment.doseId));
     if (doseIndex !== -1) {
       child.doses[doseIndex].status = newStatus;
       child.doses[doseIndex].effectiveStatus = newStatus;
@@ -350,26 +351,45 @@ function updateStatus(appointment, newStatus) {
     }
   }
 
-  if (newStatus === 'completed' && childrenStore.confirmAttendance) {
-    childrenStore.confirmAttendance(appointment.childId, appointment.doseId);
-  }
+  try {
+    if (newStatus === 'completed') {
+      await childrenStore.confirmAttendance(appointment.childId, appointment.doseId);
+    } else {
+      await childrenStore.updateDose(appointment.childId, appointment.doseId, {
+        status: newStatus === 'overdue' ? 'booked' : 'booked',
+        date: appointment.date || todayStr,
+        time: appointment.time
+      });
+    }
 
-  const statusLabels = { completed: 'مكتمل', upcoming: 'قيد المتابعة', overdue: 'متأخر' };
-  const typeIcons = { completed: 'success', upcoming: 'info', overdue: 'error' };
+    const statusLabels = { completed: 'مكتمل', upcoming: 'قيد المتابعة', overdue: 'متأخر' };
+    const typeIcons = { completed: 'success', upcoming: 'info', overdue: 'error' };
 
-  const newNotification = {
-    id: Date.now(),
-    createdAt: Date.now(),
-    type: typeIcons[newStatus],
-    title: 'تحديث حالة الإجراء',
-    desc: `تم تغيير حالة لقاح (${appointment.vaccine}) للطفل ${appointment.childName} إلى: ${statusLabels[newStatus]}`
-  };
+    const newNotification = {
+      id: Date.now(),
+      createdAt: Date.now(),
+      type: typeIcons[newStatus] || 'info',
+      title: 'تحديث حالة الإجراء',
+      desc: `تم تغيير حالة لقاح (${appointment.vaccine}) للطفل ${appointment.childName} إلى: ${statusLabels[newStatus] || newStatus}`
+    };
 
-  if (notificationsStore.addNotification) {
-    notificationsStore.addNotification(newNotification);
-  } else {
-    if (!notificationsStore.items) notificationsStore.items = [];
-    notificationsStore.items.unshift(newNotification);
+    if (notificationsStore.addNotification) {
+      notificationsStore.addNotification(newNotification);
+    } else {
+      if (!notificationsStore.items) notificationsStore.items = [];
+      notificationsStore.items.unshift(newNotification);
+    }
+  } catch (err) {
+    statusOverrides.value = { ...statusOverrides.value, [appointment.doseId]: previousStatus }
+    if (child && child.doses) {
+      const doseIndex = child.doses.findIndex(d => String(d.id) === String(appointment.doseId));
+      if (doseIndex !== -1) {
+        child.doses[doseIndex].status = previousStatus;
+        child.doses[doseIndex].effectiveStatus = previousStatus;
+        child.doses = [...child.doses];
+      }
+    }
+    alert(err.message || 'حدث خطأ أثناء تحديث حالة الجرعة')
   }
 }
 const appointmentsSection = ref(null)

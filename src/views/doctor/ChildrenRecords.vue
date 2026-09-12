@@ -5,11 +5,6 @@
         <h1>سجلات الأطفال</h1>
         <p class="subtitle">إدارة سجلات الأطفال وحالات التحصين</p>
       </div>
-      <div class="header-actions">
-        <router-link to="/doctor/create-guardian" class="btn btn-primary">
-          <i class="ti ti-plus"></i> إضافة سجل طفل
-        </router-link>
-      </div>
     </div>
 
     <section class="stats-row">

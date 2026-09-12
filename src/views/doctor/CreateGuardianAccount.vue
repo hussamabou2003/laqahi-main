@@ -236,7 +236,9 @@ async function handleSubmit() {
       await childrenStore.updateChild(editingChildId.value, {
         name: child.fullName,
         birth_date: child.birthDate,
-        gender: child.gender
+        gender: child.gender,
+        height: child.height || null,
+        weight: child.weight || null
       }, true) // true for isDoctor
       
       router.push('/doctor/children')
@@ -256,6 +258,8 @@ async function handleSubmit() {
         name: child.fullName,
         birth_date: child.birthDate,
         gender: child.gender,
+        height: child.height || null,
+        weight: child.weight || null,
         parent_id: parentId
       }, true)
 

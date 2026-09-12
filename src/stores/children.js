@@ -51,6 +51,8 @@ function normalizeChild(c) {
     fullName: c.name || c.fullName,
     birthDate: c.birth_date || c.birthDate,
     gender: c.gender,
+    height: c.height ?? null,
+    weight: c.weight ?? null,
     guardianName: c.parent?.name || c.guardianName,
     guardianNationalId: c.parent?.national_id || c.guardianNationalId,
     guardianPhone: c.parent?.phone || c.guardianPhone,
