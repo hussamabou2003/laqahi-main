@@ -61,7 +61,7 @@
           <label class="form-field">
             <span>كلمة المرور</span>
             <div class="password-wrapper">
-              <input v-model="guardian.password" :type="showPassword ? 'text' : 'password'" maxlength="8" placeholder="8 أحرف وأرقام" required />
+              <input v-model="guardian.password" :type="showPassword ? 'text' : 'password'" minlength="8" placeholder="8 أحرف وأرقام على الأقل" required />
               <button type="button" class="eye-toggle" @click="showPassword = !showPassword" aria-label="إظهار/إخفاء كلمة المرور">
                 <i :class="showPassword ? 'ti ti-eye-off' : 'ti ti-eye'"></i>
               </button>
@@ -166,7 +166,7 @@ const NATIONAL_ID_REGEX = /^\d{11}$/
 const SYRIAN_PHONE_REGEX = /^09\d{8}$/
 const showPassword = ref(false)
 errors.password = ''
-const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8}$/
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/
 
 function validateFields() {
   errors.nationalId = ''
@@ -174,7 +174,7 @@ function validateFields() {
   errors.password = ''
   if (!NATIONAL_ID_REGEX.test(guardian.nationalId)) { errors.nationalId = 'رقم الهوية يجب أن يتكون من 11 رقمًا بالضبط' }
   if (!SYRIAN_PHONE_REGEX.test(guardian.phone)) { errors.phone = 'رقم الجوال يجب أن يبدأ بـ 09 ويتكون من 10 أرقام' }
-  if (!PASSWORD_REGEX.test(guardian.password)) { errors.password = 'كلمة المرور يجب أن تتكون من 8 رموز (أحرف وأرقام معًا)' }
+  if (!PASSWORD_REGEX.test(guardian.password)) { errors.password = 'كلمة المرور يجب أن تتكون من 8 رموز على الأقل (أحرف وأرقام معًا)' }
   if (!errors.nationalId && guardiansStore.isNationalIdTaken(guardian.nationalId)) { errors.nationalId = 'هذا الرقم الوطني مسجّل بحساب موجود مسبقًا' }
   return !errors.nationalId && !errors.phone && !errors.password
 }

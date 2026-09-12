@@ -48,7 +48,7 @@
           </div>
           <label class="form-field">
             <span>كلمة المرور</span>
-            <input v-model="guardian.password" type="password" maxlength="8" placeholder="8 أحرف وأرقام" />
+            <input v-model="guardian.password" type="password" minlength="8" placeholder="8 أحرف وأرقام على الأقل" />
             <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
           </label>
         </section>
@@ -150,7 +150,7 @@ const formError = ref('')
 
 const NATIONAL_ID_REGEX = /^\d{11}$/
 const SYRIAN_PHONE_REGEX = /^09\d{8}$/
-const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8}$/
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/
 
 onMounted(() => {
   const childId = route.params.childId
@@ -194,7 +194,7 @@ function validate() {
   }
   errors.phone = SYRIAN_PHONE_REGEX.test(guardian.phone) ? '' : 'يجب أن يبدأ بـ 09 ويتكون من 10 أرقام'
   if (!isEditMode.value || guardian.password) {
-    errors.password = PASSWORD_REGEX.test(guardian.password) ? '' : '8 رموز، أحرف وأرقام معًا'
+    errors.password = PASSWORD_REGEX.test(guardian.password) ? '' : 'يجب أن تتكون من 8 رموز على الأقل (أحرف وأرقام معًا)'
   } else {
     errors.password = ''
   }
