@@ -134,15 +134,6 @@ async function handleLogout() {
       </main>
     </div>
 
-    <footer class="admin__footer">
-      <p>© 2026 نظام لقاحي للتحصينات الذكية. جميع الحقوق محفوظة.</p>
-      <div class="admin__footer-links">
-        <a href="#">اتصل بنا</a>
-        <a href="#">الشروط والأحكام</a>
-        <a href="#">سياسة الخصوصية</a>
-      </div>
-    </footer>
-
     <!-- 2. وضع مكون الإشعارات هنا لكي يظهر أعلى يسار الشاشة دائماً -->
     <ToastContainer />
   </div>
