@@ -26,12 +26,13 @@
         </label>
 
         <label class="form-field">
-          <span>اسم ولي الأمر (مطلوب لإنشاء حساب جديد)</span>
+          <span>اسم ولي الأمر</span>
           <input 
-            v-model.trim="form.guardianName" 
             type="text" 
-            :placeholder="guardianPreview ? guardianPreview.fullName : 'الاسم الكامل لولي الأمر'"
-            :disabled="!!guardianPreview"
+            :value="guardianPreview ? guardianPreview.fullName : ''"
+            placeholder="يظهر تلقائياً عند إدخال رقم وطني صحيح"
+            readonly
+            disabled
           />
         </label>
 
@@ -98,17 +99,13 @@ import { reactive, ref, computed } from 'vue'
 import { useGuardiansStore } from '../stores/guardians'
 import { useChildrenStore } from '../stores/children'
 
-import { useAuthStore } from '../stores/auth'
-
 const emit = defineEmits(['close', 'saved'])
 
 const guardiansStore = useGuardiansStore()
 const childrenStore = useChildrenStore()
-const authStore = useAuthStore()
 
 const form = reactive({ 
   guardianNationalId: '', 
-  guardianName: '',
   fullName: '', 
   birthDate: '', 
   gender: '',
@@ -133,28 +130,10 @@ async function handleSubmit() {
     return
   }
 
-  let guardian = guardiansStore.findByNationalId(form.guardianNationalId)
-
+  const guardian = guardiansStore.findByNationalId(form.guardianNationalId)
   if (!guardian) {
-    if (!form.guardianName) {
-      error.value = 'الرقم الوطني غير مسجل مسبقاً، يرجى إدخال اسم ولي الأمر لإنشاء حساب جديد'
-      return
-    }
-    try {
-      const parentRes = await guardiansStore.addGuardian({
-        fullName: form.guardianName,
-        email: `${form.guardianNationalId}@laqahi.local`,
-        password: 'Parent123',
-        nationalId: form.guardianNationalId,
-        phone: '',
-        province: authStore.currentUser?.center?.province || 'دمشق',
-        district: ''
-      })
-      guardian = { id: parentRes?.id || parentRes?.parent?.id }
-    } catch (e) {
-      error.value = 'حدث خطأ أثناء إنشاء حساب ولي الأمر تلقائياً'
-      return
-    }
+    error.value = 'لا يوجد ولي أمر مسجّل بهذا الرقم الوطني'
+    return
   }
 
   try {
